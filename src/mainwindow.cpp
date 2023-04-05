@@ -1,10 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QFile>
 #include <QCheckBox>
 #include <QLabel>
-#include <QStringList>
+
+#include "csvdata.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -12,64 +12,30 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QChar delim = ',';
+    char delim = ',';
 
-    QFile fileA("testA.csv");
-    QFile fileB("testB.csv");
+    CsvData csvA = CsvData("testA.csv", delim);
+    CsvData csvB = CsvData("testB.csv", delim);
 
-    if (fileA.open(QIODevice::ReadOnly) && fileB.open(QIODevice::ReadOnly))
+    for (int c = 0; c < csvA.getNumCols(); ++c)
     {
-        QStringList headers;
-        QList<QStringList> valuesA;
-        QList<QStringList> valuesB;
+        ui->gridComparisonA->addWidget(new QCheckBox(csvA.getHeader(c)), 0, c);
+        ui->gridComparisonB->addWidget(new QCheckBox(csvB.getHeader(c)), 0, c);
+    }
 
-        QString line1 = fileA.readLine().trimmed();
-        if (line1 == fileB.readLine().trimmed())
+    for (int r = 0; r < csvA.getNumRows(); ++r)
+    {
+        for (int c = 0; c < csvA.getNumCols(); ++c)
         {
-            headers = line1.split(delim);
+            ui->gridComparisonA->addWidget(new QLabel(csvA.getVal(r, c)), r+1, c);
         }
-        else
-        {
-            // TODO: Proper handling
-            qDebug("Header mismatch!");
-            exit(1);
-        }
+    }
 
-
-        while (!fileA.atEnd())
+    for (int r = 0; r < csvB.getNumRows(); ++r)
+    {
+        for (int c = 0; c < csvB.getNumCols(); ++c)
         {
-            QString line = fileA.readLine().trimmed();
-            valuesA.append(line.split(','));
-        }
-        while (!fileB.atEnd())
-        {
-            QString line = fileB.readLine().trimmed();
-            valuesB.append(line.split(','));
-        }
-
-        for (int col = 0; col < headers.size(); ++col)
-        {
-            ui->gridComparisonA->addWidget(new QCheckBox(headers.at(col)), 0, col);
-            ui->gridComparisonB->addWidget(new QCheckBox(headers.at(col)), 0, col);
-        }
-
-        for (int r = 0; r < valuesA.size(); ++r)
-        {
-            QStringList line = valuesA.at(r);
-
-            for (int c = 0; c < line.size(); ++c)
-            {
-                ui->gridComparisonA->addWidget(new QLabel(line.at(c)), r+1, c);
-            }
-        }
-        for (int r = 0; r < valuesB.size(); ++r)
-        {
-            QStringList line = valuesB.at(r);
-
-            for (int c = 0; c < line.size(); ++c)
-            {
-                ui->gridComparisonB->addWidget(new QLabel(line.at(c)), r+1, c);
-            }
+            ui->gridComparisonB->addWidget(new QLabel(csvB.getVal(r, c)), r+1, c);
         }
     }
 }

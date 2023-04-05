@@ -17,6 +17,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    void setupCsvValues();
+    void updateDiff();
 };
 
 #endif // MAINWINDOW_H

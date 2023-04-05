@@ -11,7 +11,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setupCsvValues();
+}
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::setupCsvValues()
+{
     char delim = ',';
 
     CsvData csvA = CsvData("testA.csv", delim);
@@ -40,7 +49,9 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 }
 
-MainWindow::~MainWindow()
+void MainWindow::updateDiff()
 {
-    delete ui;
+    // TODO: get [[row,col]] that are different
+    // TODO: pass tolerance (global)
+    // TODO: pass headers (localized tolerance)
 }

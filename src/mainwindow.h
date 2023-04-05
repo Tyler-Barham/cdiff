@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QThread>
+
+#include "csvcomparison.h"
 
 namespace Ui {
 class MainWindow;
@@ -18,8 +21,23 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    void setupCsvValues();
-    void updateDiff();
+    void setupCsv();
+    void triggerUpdate();
+    void resetHighlighting();
+
+    CsvComparison *csvComparison;
+    QThread *csvThread;
+
+private slots:
+    void displayHeaders(QStringList headersA, QStringList headersB);
+    void displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB);
+    void displayDiff(QList<QPoint> diffPoints);
+
+    void on_inputThreshold_valueChanged(double arg1);
+
+signals:
+    void loadCsv(QString filepathA, QString filepathB, char delimiter);
+    void updateDiff(double threshold, QList<int> columnIndexes);
 };
 
 #endif // MAINWINDOW_H

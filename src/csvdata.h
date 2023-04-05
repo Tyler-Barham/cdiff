@@ -11,14 +11,15 @@
 class CsvData
 {
 public:
-    CsvData(char delimiter=',');
-    CsvData(QString filepath, char delimiter=',');
-    CsvData(QFile file, char delimiter=',');
+    CsvData();
+
+    void setup(QString filename, char delim);
 
     int getNumRows() { return data.size(); }
-    int getNumCols() { return dataTransposed.size(); }
+    int getNumCols(int row=0);
 
     QStringList getHeaders() { return headers; }
+    QList<QStringList> getCsv() { return data; }
     QStringList getRow(int row);
     QStringList getCol(int col);
 
@@ -26,12 +27,9 @@ public:
     QString getHeader(int col);
 
 private:
-    const char delim;
     QStringList headers;
     QList<QStringList> data;
     QList<QStringList> dataTransposed;
-
-    void init(QFile& file);
 };
 
 #endif // CSV_H

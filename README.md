@@ -1,5 +1,7 @@
 # cdiff
 
+_This readme is for the bash tool. There is a Qt GUI version in progress..._
+
 A csv diff tool that allows the values of specified columns to differ
 
 ## Output

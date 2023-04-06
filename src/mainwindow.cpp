@@ -52,31 +52,40 @@ void MainWindow::setupCsv()
 
 void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 {
-    for (int col = 0; col < headersA.size(); ++col)
+    int maxCols = std::max(headersA.size(), headersB.size());
+
+    for (int col = 0; col < maxCols; ++col)
     {
-        ui->gridComparisonA->addWidget(new QCheckBox(headersA.at(col)), 0, col);
-    }
-    for (int col = 0; col < headersB.size(); ++col)
-    {
-        ui->gridComparisonB->addWidget(new QCheckBox(headersB.at(col)), 0, col);
+        QString headA = headersA.value(col);
+        QString headB = headersB.value(col);
+        if (headA == "") headA = headB;
+        if (headB == "") headB = headA;
+
+        ui->gridComparisonA->addWidget(new QCheckBox(headA), 0, col);
+        ui->gridComparisonB->addWidget(new QCheckBox(headB), 0, col);
     }
 }
 
 void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
 {
-    for (int row = 0; row < csvDataA.size(); ++row)
-    {
-        for (int col = 0; col < csvDataA.at(row).size(); ++col)
-        {
-            ui->gridComparisonA->addWidget(new QLabel(csvDataA.at(row).at(col)), row+1, col);
-        }
-    }
+    int maxRows = std::max(csvDataA.size(), csvDataB.size());
 
-    for (int row = 0; row < csvDataB.size(); ++row)
+    for (int row = 0; row < maxRows; ++row)
     {
-        for (int col = 0; col < csvDataB.at(row).size(); ++col)
+        // .value() will return and empty QStringList() if index out-of-bounds
+        QStringList rowA = csvDataA.value(row);
+        QStringList rowB = csvDataB.value(row);
+
+        int maxCols = std::max(rowA.size(), rowB.size());
+
+        for (int col = 0; col < maxCols; ++col)
         {
-            ui->gridComparisonB->addWidget(new QLabel(csvDataB.at(row).at(col)), row+1, col);
+            // .value() will return and empty QString() if index out-of-bounds
+            QString valA = rowA.value(col);
+            QString valB = rowB.value(col);
+
+            ui->gridComparisonA->addWidget(new QLabel(valA), row+1, col);
+            ui->gridComparisonB->addWidget(new QLabel(valB), row+1, col);
         }
     }
 
@@ -106,19 +115,26 @@ void MainWindow::triggerUpdate()
 
     // Trigger a diff update
     emit updateDiff(thresh, columnIndexes);
+
     // Reset higlighting while the diff thread is working
     resetHighlighting();
 }
 
 void MainWindow::resetHighlighting()
 {
-    for (int row = 0; row < ui->gridComparisonA->rowCount(); ++row)
-      for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
-          ui->gridComparisonA->itemAtPosition(row, col)->widget()->setStyleSheet("");
+    // Even if data is different, the grids should be the same size
+    if (ui->gridComparisonA->rowCount() != ui->gridComparisonB->rowCount() ||
+        ui->gridComparisonA->columnCount() != ui->gridComparisonB->columnCount())
+        return;
 
-    for (int row = 0; row < ui->gridComparisonB->rowCount(); ++row)
-      for (int col = 0; col < ui->gridComparisonB->columnCount(); ++col)
-          ui->gridComparisonB->itemAtPosition(row, col)->widget()->setStyleSheet("");
+    for (int row = 1; row < ui->gridComparisonA->rowCount(); ++row)
+    {
+        for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
+        {
+            ui->gridComparisonA->itemAtPosition(row, col)->widget()->setStyleSheet("");
+            ui->gridComparisonB->itemAtPosition(row, col)->widget()->setStyleSheet("");
+        }
+    }
 }
 
 void MainWindow::on_inputThreshold_valueChanged(double arg1)

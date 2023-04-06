@@ -21,6 +21,7 @@ public:
 private:
     CsvData *csvDataA;
     CsvData *csvDataB;
+    QList<QList<double>> diffValues;
     QList<QPoint> diffPoints;
 
 public slots:

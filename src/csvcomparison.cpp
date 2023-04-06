@@ -1,5 +1,7 @@
 #include "csvcomparison.h"
 
+#include <float.h>
+
 CsvComparison::CsvComparison()
 {
     csvDataA = new CsvData();
@@ -17,52 +19,70 @@ void CsvComparison::loadCsv(QString filepathA, QString filepathB, char delimiter
     csvDataA->setup(filepathA, delimiter);
     csvDataB->setup(filepathB, delimiter);
 
+    QList<QStringList> dataA = csvDataA->getCsv();
+    QList<QStringList> dataB = csvDataB->getCsv();
+
     emit displayHeaders(csvDataA->getHeaders(), csvDataB->getHeaders());
-    emit displayCsv(csvDataA->getCsv(), csvDataB->getCsv());
-}
+    emit displayCsv(dataA, dataB);
 
-void CsvComparison::updateDiff(double threshold, QList<int> headerIdxs)
-{
-    diffPoints.clear();
+    // Store the diference
+    diffValues.clear();
+    int maxRows = std::max(dataA.size(), dataB.size());
 
-    // TODO: Handle different number of rows/cols between files
-    int minRows = std::min(csvDataA->getNumRows(), csvDataB->getNumRows());
-    int maxRows = std::max(csvDataA->getNumRows(), csvDataB->getNumRows());
-
-    for (int row = 0; row < minRows; ++row)
+    for (int row = 0; row < maxRows; ++row)
     {
-        int minCols = std::min(csvDataA->getNumCols(row), csvDataB->getNumCols(row));
-        int maxCols = std::max(csvDataA->getNumCols(row), csvDataB->getNumCols(row));
+        diffValues.append(QList<double>());
+        QStringList rowA = dataA.value(row);
+        QStringList rowB = dataB.value(row);
 
-        for (int col = 0; col < minCols; ++col)
+        int maxCols = std::max(rowA.size(), rowB.size());
+
+        for (int col = 0; col < maxCols; ++col)
         {
-            QString valA = csvDataA->getVal(row, col);
-            QString valB = csvDataB->getVal(row, col);
+            QString valA = rowA.value(col);
+            QString valB = rowB.value(col);
+            double diff = 0.0;
 
-            // str comparison passed
-            if (valA == valB)
-                continue;
-
-            // Track if the diff is less than the threshold
-            bool isAcceptable = false;
-
-            if (headerIdxs.contains(col))
+            if (valA == valB) // strings equal
+                diff = 0.0;
+            else if (valA == "" || valB == "") // different number of rows/columns
+                diff = -1.0;
+            else // different values
             {
                 bool isNumericA = false;
                 bool isNumericB = false;
                 double numA = valA.toDouble(&isNumericA);
                 double numB = valB.toDouble(&isNumericB);
-                if (isNumericA && isNumericB && (std::abs(numA-numB) <= threshold))
-                {
-                    isAcceptable = true;
-                }
+                if (isNumericA && isNumericB) // Get numeric difference
+                    diff = std::abs(numA-numB);
+                else // different strings || one cannot be cast to double
+                    diff = -1.0;
             }
-
-            if (!isAcceptable)
-            {
-                diffPoints.append(QPoint(col, row));
-            }
+            diffValues[row].append(diff);
         }
     }
+}
+
+void CsvComparison::updateDiff(double threshold, QList<int> headerIdxs)
+{
+    // Check which differences are ok
+    diffPoints.clear();
+
+    for (int row = 0; row < diffValues.size(); ++row)
+    {
+        for (int col = 0; col < diffValues.at(row).size(); ++col)
+        {
+            double val = diffValues.at(row).at(col);
+
+            if (val < 0) // Strings !eq and could not do numeric comparison
+                diffPoints.append(QPoint(col, row));
+            else if (!headerIdxs.contains(col) && val != 0.0) // Different and column expects exact match
+                diffPoints.append(QPoint(col, row));
+            else if (headerIdxs.contains(col) && (val - FLT_EPSILON) > threshold) // Column allows diff vals but diff is too much
+                diffPoints.append(QPoint(col, row));
+            // else exact or tolerable match
+        }
+    }
+
     emit displayDiff(diffPoints);
 }

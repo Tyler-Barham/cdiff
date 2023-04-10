@@ -28,12 +28,15 @@ private:
     CsvComparison *csvComparison;
     QThread *csvThread;
 
+    int fDataRow = 1;
+
 private slots:
     void displayHeaders(QStringList headersA, QStringList headersB);
     void displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB);
     void displayDiff(QList<QPoint> diffPoints);
 
     void on_inputThreshold_valueChanged(double arg1);
+    void onCheckboxStateChanged(int state);
 
 signals:
     void loadCsv(QString filepathA, QString filepathB, char delimiter);

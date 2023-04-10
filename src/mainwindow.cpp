@@ -60,9 +60,19 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
         QString headB = headersB.value(col);
         if (headA == "") headA = headB;
         if (headB == "") headB = headA;
+        if (headA != headB)
+        {
+            headA = QString("%1 | %2").arg(headA).arg(headB);
+            headB = headA;
+        }
 
-        ui->gridComparisonA->addWidget(new QCheckBox(headA), 0, col);
-        ui->gridComparisonB->addWidget(new QCheckBox(headB), 0, col);
+        QCheckBox *colHeadA = new QCheckBox(headA);
+        QCheckBox *colHeadB = new QCheckBox(headB);
+        connect(colHeadA, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
+        connect(colHeadB, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
+
+        ui->gridComparisonA->addWidget(colHeadA, 0, col);
+        ui->gridComparisonB->addWidget(colHeadB, 0, col);
     }
 }
 
@@ -84,8 +94,8 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
             QString valA = rowA.value(col);
             QString valB = rowB.value(col);
 
-            ui->gridComparisonA->addWidget(new QLabel(valA), row+1, col);
-            ui->gridComparisonB->addWidget(new QLabel(valB), row+1, col);
+            ui->gridComparisonA->addWidget(new QLabel(valA), fDataRow+row, col);
+            ui->gridComparisonB->addWidget(new QLabel(valB), fDataRow+row, col);
         }
     }
 
@@ -98,11 +108,11 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
     {
         QLayoutItem* layoutItem;
 
-        layoutItem = ui->gridComparisonA->itemAtPosition(p.y()+1, p.x());
+        layoutItem = ui->gridComparisonA->itemAtPosition(fDataRow+p.y(), p.x());
         if (layoutItem != nullptr && layoutItem->widget() != nullptr)
             layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
 
-        layoutItem = ui->gridComparisonB->itemAtPosition(p.y()+1, p.x());
+        layoutItem = ui->gridComparisonB->itemAtPosition(fDataRow+p.y(), p.x());
         if (layoutItem != nullptr && layoutItem->widget() != nullptr)
             layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
     }
@@ -111,7 +121,14 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
 void MainWindow::triggerUpdate()
 {
     double thresh = ui->inputThreshold->value();
-    QList<int> columnIndexes({0, 1, 2}); // TODO: pull from the UI
+    QList<int> columnIndexes;
+    for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
+    {
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(ui->gridComparisonA->itemAtPosition(0, col)->widget());
+
+        if (colHead->isChecked())
+            columnIndexes.append(col);
+    }
 
     // Trigger a diff update
     emit updateDiff(thresh, columnIndexes);
@@ -127,7 +144,7 @@ void MainWindow::resetHighlighting()
         ui->gridComparisonA->columnCount() != ui->gridComparisonB->columnCount())
         return;
 
-    for (int row = 1; row < ui->gridComparisonA->rowCount(); ++row)
+    for (int row = fDataRow; row < ui->gridComparisonA->rowCount(); ++row)
     {
         for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
         {
@@ -140,6 +157,32 @@ void MainWindow::resetHighlighting()
 void MainWindow::on_inputThreshold_valueChanged(double arg1)
 {
     Q_UNUSED(arg1)
+
+    triggerUpdate();
+}
+
+void MainWindow::onCheckboxStateChanged(int state)
+{
+    Q_UNUSED(state);
+
+    QWidget *header = qobject_cast<QWidget*>(sender());
+    int idxA = ui->gridComparisonA->indexOf(header);
+    int idxB = ui->gridComparisonB->indexOf(header);
+
+    if (idxA > -1)
+    {
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(ui->gridComparisonB->itemAtPosition(0, idxA)->widget());
+        colHead->setCheckState(static_cast<Qt::CheckState>(state));
+    }
+    else if (idxB > -1)
+    {
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(ui->gridComparisonA->itemAtPosition(0, idxB)->widget());
+        colHead->setCheckState(static_cast<Qt::CheckState>(state));
+    }
+    else
+    {
+        qFatal("Both sides of comparison should have same number of columns but don't!");
+    }
 
     triggerUpdate();
 }

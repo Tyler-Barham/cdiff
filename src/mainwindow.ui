@@ -34,7 +34,7 @@
       <number>10</number>
      </property>
      <property name="bottomMargin">
-      <number>5</number>
+      <number>10</number>
      </property>
      <item>
       <layout class="QHBoxLayout" name="layoutTopbar">
@@ -101,7 +101,21 @@
      <item>
       <layout class="QHBoxLayout" name="layoutComparison">
        <item>
-        <layout class="QGridLayout" name="gridComparisonA"/>
+        <widget class="QScrollArea" name="scrollAreaA">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollContentsA">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>465</width>
+            <height>545</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
        </item>
        <item>
         <widget class="Line" name="lineComparison">
@@ -111,7 +125,21 @@
         </widget>
        </item>
        <item>
-        <layout class="QGridLayout" name="gridComparisonB"/>
+        <widget class="QScrollArea" name="scrollAreaB">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollContentsB">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>465</width>
+            <height>545</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
        </item>
       </layout>
      </item>

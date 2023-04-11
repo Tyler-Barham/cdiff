@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QGridLayout>
 #include <QThread>
 
 #include "csvcomparison.h"
@@ -20,7 +21,10 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QGridLayout *gridA;
+    QGridLayout *gridB;
 
+    void resizeEvent(QResizeEvent *event) override;
     void setupCsv();
     void triggerUpdate();
     void resetHighlighting();

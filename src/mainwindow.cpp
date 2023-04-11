@@ -9,6 +9,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    gridA = new QGridLayout(ui->scrollContentsA);
+    gridB = new QGridLayout(ui->scrollContentsB);
+    ui->scrollContentsA->setLayout(gridA);
+    ui->scrollContentsB->setLayout(gridB);
+
     setupCsv();
 }
 
@@ -20,7 +25,17 @@ MainWindow::~MainWindow()
     delete csvComparison;
     delete csvThread;
 
+    delete gridA;
+    delete gridB;
+
     delete ui;
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+
+    //ui->layoutMain->
 }
 
 void MainWindow::setupCsv()
@@ -71,8 +86,8 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
         connect(colHeadA, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
         connect(colHeadB, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
 
-        ui->gridComparisonA->addWidget(colHeadA, 0, col);
-        ui->gridComparisonB->addWidget(colHeadB, 0, col);
+        gridA->addWidget(colHeadA, 0, col);
+        gridB->addWidget(colHeadB, 0, col);
     }
 }
 
@@ -94,8 +109,8 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
             QString valA = rowA.value(col);
             QString valB = rowB.value(col);
 
-            ui->gridComparisonA->addWidget(new QLabel(valA), fDataRow+row, col);
-            ui->gridComparisonB->addWidget(new QLabel(valB), fDataRow+row, col);
+            gridA->addWidget(new QLabel(valA), fDataRow+row, col);
+            gridB->addWidget(new QLabel(valB), fDataRow+row, col);
         }
     }
 
@@ -108,11 +123,11 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
     {
         QLayoutItem* layoutItem;
 
-        layoutItem = ui->gridComparisonA->itemAtPosition(fDataRow+p.y(), p.x());
+        layoutItem = gridA->itemAtPosition(fDataRow+p.y(), p.x());
         if (layoutItem != nullptr && layoutItem->widget() != nullptr)
             layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
 
-        layoutItem = ui->gridComparisonB->itemAtPosition(fDataRow+p.y(), p.x());
+        layoutItem = gridB->itemAtPosition(fDataRow+p.y(), p.x());
         if (layoutItem != nullptr && layoutItem->widget() != nullptr)
             layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
     }
@@ -122,15 +137,15 @@ void MainWindow::triggerUpdate()
 {
     double thresh = ui->inputTolerance->value();
     QList<int> columnIndexes;
-    for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
+    for (int col = 0; col < gridA->columnCount(); ++col)
     {
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(ui->gridComparisonA->itemAtPosition(0, col)->widget());
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, col)->widget());
 
         if (colHead->isChecked())
             columnIndexes.append(col);
     }
 
-    if (columnIndexes.size() == ui->gridComparisonA->columnCount())
+    if (columnIndexes.size() == gridA->columnCount())
         ui->checkBoxAllCols->setCheckState(Qt::CheckState::Checked);
     else if (columnIndexes.size() == 0)
         ui->checkBoxAllCols->setCheckState(Qt::CheckState::Unchecked);
@@ -147,16 +162,16 @@ void MainWindow::triggerUpdate()
 void MainWindow::resetHighlighting()
 {
     // Even if data is different, the grids should be the same size
-    if (ui->gridComparisonA->rowCount() != ui->gridComparisonB->rowCount() ||
-        ui->gridComparisonA->columnCount() != ui->gridComparisonB->columnCount())
+    if (gridA->rowCount() != gridB->rowCount() ||
+        gridA->columnCount() != gridB->columnCount())
         return;
 
-    for (int row = fDataRow; row < ui->gridComparisonA->rowCount(); ++row)
+    for (int row = fDataRow; row < gridA->rowCount(); ++row)
     {
-        for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
+        for (int col = 0; col < gridA->columnCount(); ++col)
         {
-            ui->gridComparisonA->itemAtPosition(row, col)->widget()->setStyleSheet("");
-            ui->gridComparisonB->itemAtPosition(row, col)->widget()->setStyleSheet("");
+            gridA->itemAtPosition(row, col)->widget()->setStyleSheet("");
+            gridB->itemAtPosition(row, col)->widget()->setStyleSheet("");
         }
     }
 }
@@ -173,17 +188,17 @@ void MainWindow::onCheckboxStateChanged(int state)
     Q_UNUSED(state);
 
     QWidget *header = qobject_cast<QWidget*>(sender());
-    int idxA = ui->gridComparisonA->indexOf(header);
-    int idxB = ui->gridComparisonB->indexOf(header);
+    int idxA = gridA->indexOf(header);
+    int idxB = gridB->indexOf(header);
 
     if (idxA > -1)
     {
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(ui->gridComparisonB->itemAtPosition(0, idxA)->widget());
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(gridB->itemAtPosition(0, idxA)->widget());
         colHead->setCheckState(static_cast<Qt::CheckState>(state));
     }
     else if (idxB > -1)
     {
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(ui->gridComparisonA->itemAtPosition(0, idxB)->widget());
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, idxB)->widget());
         colHead->setCheckState(static_cast<Qt::CheckState>(state));
     }
     else
@@ -202,10 +217,10 @@ void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
     if (state == Qt::CheckState::PartiallyChecked) return;
 
     // This checkBox was clicked
-    for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
+    for (int col = 0; col < gridA->columnCount(); ++col)
     {
-        QCheckBox *colHeadA = qobject_cast<QCheckBox*>(ui->gridComparisonA->itemAtPosition(0, col)->widget());
-        QCheckBox *colHeadB = qobject_cast<QCheckBox*>(ui->gridComparisonB->itemAtPosition(0, col)->widget());
+        QCheckBox *colHeadA = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, col)->widget());
+        QCheckBox *colHeadB = qobject_cast<QCheckBox*>(gridB->itemAtPosition(0, col)->widget());
 
         colHeadA->blockSignals(true);
         colHeadB->blockSignals(true);

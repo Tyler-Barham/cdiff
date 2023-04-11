@@ -35,7 +35,18 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
 
-    //ui->layoutMain->
+    QRect rectCentral = ui->centralWidget->geometry();
+    rectCentral.setWidth(event->size().width());
+    rectCentral.setHeight(event->size().height());
+    ui->centralWidget->setGeometry(rectCentral);
+    ui->layoutMain->setGeometry(rectCentral);
+
+    QRect rectComp = ui->layoutComparison->geometry();
+    int newCompWidth = event->size().width() - (rectComp.x()*2); // Assumes this item is centered horizontally
+    int newCompHeight = event->size().height() - rectComp.y(); // Assumes this item is the bottom-most
+    rectComp.setWidth(newCompWidth);
+    rectComp.setHeight(newCompHeight);
+    ui->layoutComparison->setGeometry(rectComp);
 }
 
 void MainWindow::setupCsv()

@@ -130,6 +130,13 @@ void MainWindow::triggerUpdate()
             columnIndexes.append(col);
     }
 
+    if (columnIndexes.size() == ui->gridComparisonA->columnCount())
+        ui->checkBoxAllCols->setCheckState(Qt::CheckState::Checked);
+    else if (columnIndexes.size() == 0)
+        ui->checkBoxAllCols->setCheckState(Qt::CheckState::Unchecked);
+    else
+        ui->checkBoxAllCols->setCheckState(Qt::CheckState::PartiallyChecked);
+
     // Trigger a diff update
     emit updateDiff(thresh, columnIndexes);
 
@@ -182,6 +189,32 @@ void MainWindow::onCheckboxStateChanged(int state)
     else
     {
         qFatal("Both sides of comparison should have same number of columns but don't!");
+    }
+
+    triggerUpdate();
+}
+
+void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
+{
+    Qt::CheckState state = static_cast<Qt::CheckState>(arg1);
+
+    // A column header was clicked
+    if (state == Qt::CheckState::PartiallyChecked) return;
+
+    // This checkBox was clicked
+    for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
+    {
+        QCheckBox *colHeadA = qobject_cast<QCheckBox*>(ui->gridComparisonA->itemAtPosition(0, col)->widget());
+        QCheckBox *colHeadB = qobject_cast<QCheckBox*>(ui->gridComparisonB->itemAtPosition(0, col)->widget());
+
+        colHeadA->blockSignals(true);
+        colHeadB->blockSignals(true);
+
+        colHeadA->setCheckState(state);
+        colHeadB->setCheckState(state);
+
+        colHeadA->blockSignals(false);
+        colHeadB->blockSignals(false);
     }
 
     triggerUpdate();

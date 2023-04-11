@@ -120,7 +120,7 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
 
 void MainWindow::triggerUpdate()
 {
-    double thresh = ui->inputThreshold->value();
+    double thresh = ui->inputTolerance->value();
     QList<int> columnIndexes;
     for (int col = 0; col < ui->gridComparisonA->columnCount(); ++col)
     {
@@ -161,7 +161,7 @@ void MainWindow::resetHighlighting()
     }
 }
 
-void MainWindow::on_inputThreshold_valueChanged(double arg1)
+void MainWindow::on_inputTolerance_valueChanged(double arg1)
 {
     Q_UNUSED(arg1)
 

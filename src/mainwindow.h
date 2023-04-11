@@ -39,7 +39,7 @@ private slots:
     void onCheckboxStateChanged(int state);
 
     // Connected to UI signals (automatically)
-    void on_inputThreshold_valueChanged(double arg1);
+    void on_inputTolerance_valueChanged(double arg1);
     void on_checkBoxAllCols_stateChanged(int arg1);
 
 signals:

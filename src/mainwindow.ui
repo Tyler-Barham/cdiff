@@ -23,7 +23,7 @@
       <height>611</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="layoutMain" stretch="0,1">
+    <layout class="QVBoxLayout" name="layoutMain" stretch="0,0,1">
      <property name="leftMargin">
       <number>10</number>
      </property>
@@ -39,16 +39,29 @@
      <item>
       <layout class="QHBoxLayout" name="layoutTopbar">
        <item>
-        <layout class="QHBoxLayout" name="layoutThreshold">
+        <widget class="QLabel" name="labelSettings">
+         <property name="text">
+          <string>Settings</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="layoutTolerance">
+         <property name="leftMargin">
+          <number>20</number>
+         </property>
+         <property name="rightMargin">
+          <number>20</number>
+         </property>
          <item>
-          <widget class="QLabel" name="labelThreshold">
+          <widget class="QLabel" name="labelTolerance">
            <property name="text">
-            <string>Threshold:</string>
+            <string>Tolerance:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="inputThreshold">
+          <widget class="QDoubleSpinBox" name="inputTolerance">
            <property name="singleStep">
             <double>0.100000000000000</double>
            </property>
@@ -59,12 +72,12 @@
        <item>
         <widget class="QCheckBox" name="checkBoxAllCols">
          <property name="text">
-          <string>All Columns</string>
+          <string>All columns</string>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="spacerTopbar">
+        <spacer name="spacerTopbarEnd">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -79,12 +92,19 @@
       </layout>
      </item>
      <item>
+      <widget class="Line" name="lineTopbar">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="layoutComparison">
        <item>
         <layout class="QGridLayout" name="gridComparisonA"/>
        </item>
        <item>
-        <widget class="Line" name="line">
+        <widget class="Line" name="lineComparison">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

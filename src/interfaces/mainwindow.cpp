@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <QCheckBox>
+#include <QFileDialog>
 #include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -9,10 +10,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     gridA = new QGridLayout(ui->scrollContentsA);
     gridB = new QGridLayout(ui->scrollContentsB);
     ui->scrollContentsA->setLayout(gridA);
     ui->scrollContentsB->setLayout(gridB);
+
+    QPixmap csvPixmap = QPixmap(":/icons/csv.png").scaledToHeight(16, Qt::SmoothTransformation);
+    ui->iconFileA->setPixmap(csvPixmap);
+    ui->iconFileB->setPixmap(csvPixmap);
+
+    delim = ',';
 
     setupCsv();
 }
@@ -51,8 +59,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::setupCsv()
 {
-    char delim = ',';
-
     csvComparison = new CsvComparison();
 
     // Move the csv processing to another thread so we don't block the UI
@@ -66,18 +72,35 @@ void MainWindow::setupCsv()
     // General loading and displaying
     connect(this, &MainWindow::loadCsv, csvComparison, &CsvComparison::loadCsv);
     connect(this, &MainWindow::updateDiff, csvComparison, &CsvComparison::updateDiff);
-    connect(csvComparison, &CsvComparison::displayHeaders, this, &MainWindow::displayHeaders);
     connect(csvComparison, &CsvComparison::displayCsv, this, &MainWindow::displayCsv);
     connect(csvComparison, &CsvComparison::displayDiff, this, &MainWindow::displayDiff);
 
     // Start thread to begin catch signals
     csvThread->start();
+}
 
-    emit loadCsv("testA.csv", "testB.csv", delim);
+/// Doesn't clear headers
+void MainWindow::clearCsvGrids()
+{
+    QLayoutItem *child;
+    while ((child = gridA->takeAt(0)) != 0)
+    {
+        child->widget()->hide();
+        gridA->removeItem(child);
+        delete child;
+    }
+    while ((child = gridB->takeAt(0)) != 0)
+    {
+        child->widget()->hide();
+        gridB->removeItem(child);
+        delete child;
+    }
 }
 
 void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 {
+    bool selectAll = ui->checkBoxAllCols->isChecked();
+
     int maxCols = std::max(headersA.size(), headersB.size());
 
     for (int col = 0; col < maxCols; ++col)
@@ -94,6 +117,8 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 
         QCheckBox *colHeadA = new QCheckBox(headA);
         QCheckBox *colHeadB = new QCheckBox(headB);
+        colHeadA->setChecked(selectAll);
+        colHeadB->setChecked(selectAll);
         connect(colHeadA, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
         connect(colHeadB, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
 
@@ -104,6 +129,10 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 
 void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
 {
+    clearCsvGrids();
+    displayHeaders(csvDataA.takeFirst(), csvDataB.takeFirst());
+
+    // Now display data
     int maxRows = std::max(csvDataA.size(), csvDataB.size());
 
     for (int row = 0; row < maxRows; ++row)
@@ -120,8 +149,8 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
             QString valA = rowA.value(col);
             QString valB = rowB.value(col);
 
-            gridA->addWidget(new QLabel(valA), fDataRow+row, col);
-            gridB->addWidget(new QLabel(valB), fDataRow+row, col);
+            gridA->addWidget(new QLabel(valA), row+1, col); // +1 as we popped the first row as headers
+            gridB->addWidget(new QLabel(valB), row+1, col);
         }
     }
 
@@ -175,9 +204,9 @@ void MainWindow::resetHighlighting()
     // Even if data is different, the grids should be the same size
     if (gridA->rowCount() != gridB->rowCount() ||
         gridA->columnCount() != gridB->columnCount())
-        return;
+        qFatal("Inconsistent grid sizes!");
 
-    for (int row = fDataRow; row < gridA->rowCount(); ++row)
+    for (int row = 0; row < gridA->rowCount(); ++row)
     {
         for (int col = 0; col < gridA->columnCount(); ++col)
         {
@@ -244,4 +273,15 @@ void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
     }
 
     triggerUpdate();
+}
+
+void MainWindow::on_btnSelectFiles_clicked()
+{
+    QString pathA = QFileDialog::getOpenFileName(this, tr("Select fileA"), ".", "CSV (*.csv)");
+    QString pathB = QFileDialog::getOpenFileName(this, tr("Select fileB"), ".", "CSV (*.csv)");
+
+    ui->labelFileA->setText(pathA.split('/').last());
+    ui->labelFileB->setText(pathB.split('/').last());
+
+    emit loadCsv(pathA, pathB, delim);
 }

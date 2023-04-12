@@ -5,7 +5,7 @@
 #include <QGridLayout>
 #include <QThread>
 
-#include "csvcomparison.h"
+#include "csv/csvcomparison.h"
 
 namespace Ui {
 class MainWindow;
@@ -26,16 +26,18 @@ private:
 
     void resizeEvent(QResizeEvent *event) override;
     void setupCsv();
+    void displayHeaders(QStringList headersA, QStringList headersB);
+    void clearCsvGrids();
     void triggerUpdate();
     void resetHighlighting();
 
     CsvComparison *csvComparison;
     QThread *csvThread;
 
-    int fDataRow = 1;
+    int fDataRow;
+    char delim;
 
 private slots:
-    void displayHeaders(QStringList headersA, QStringList headersB);
     void displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB);
     void displayDiff(QList<QPoint> diffPoints);
 
@@ -45,6 +47,7 @@ private slots:
     // Connected to UI signals (automatically)
     void on_inputTolerance_valueChanged(double arg1);
     void on_checkBoxAllCols_stateChanged(int arg1);
+    void on_btnSelectFiles_clicked();
 
 signals:
     void loadCsv(QString filepathA, QString filepathB, char delimiter);

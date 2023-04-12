@@ -28,6 +28,9 @@ void CsvData::setup(QString filepath, char delimiter)
     for (QString& val : headers)
         val = val.trimmed();
 
+    data.clear();
+    dataTransposed.clear();
+
     while (!file.atEnd())
     {
         // Read line and trim whitespace

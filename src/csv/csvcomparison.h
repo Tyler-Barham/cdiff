@@ -29,7 +29,6 @@ public slots:
     void updateDiff(double threshold, QList<int> headerIdxs);
 
 signals:
-    void displayHeaders(QStringList headersA, QStringList headersB);
     void displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB);
     void displayDiff(QList<QPoint> diffPoints);
 };

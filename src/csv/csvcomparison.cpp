@@ -19,10 +19,14 @@ void CsvComparison::loadCsv(QString filepathA, QString filepathB, char delimiter
     csvDataA->setup(filepathA, delimiter);
     csvDataB->setup(filepathB, delimiter);
 
-    QList<QStringList> dataA = csvDataA->getCsv();
-    QList<QStringList> dataB = csvDataB->getCsv();
+    QList<QStringList> dataA;
+    dataA.append(csvDataA->getHeaders());
+    dataA.append(csvDataA->getCsv());
 
-    emit displayHeaders(csvDataA->getHeaders(), csvDataB->getHeaders());
+    QList<QStringList> dataB;
+    dataB.append(csvDataB->getHeaders());
+    dataB.append(csvDataB->getCsv());
+
     emit displayCsv(dataA, dataB);
 
     // Store the diference

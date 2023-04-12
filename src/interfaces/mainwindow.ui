@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>971</width>
-    <height>636</height>
+    <width>1052</width>
+    <height>641</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>CDiff</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QWidget" name="verticalLayoutWidget">
@@ -19,8 +19,8 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>971</width>
-      <height>611</height>
+      <width>1053</width>
+      <height>618</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="layoutMain" stretch="0,0,1">
@@ -39,11 +39,59 @@
      <item>
       <layout class="QHBoxLayout" name="layoutTopbar">
        <item>
-        <widget class="QLabel" name="labelSettings">
-         <property name="text">
-          <string>Settings</string>
+        <layout class="QHBoxLayout" name="layoutFiles">
+         <item>
+          <widget class="QPushButton" name="btnSelectFiles">
+           <property name="text">
+            <string>Select Files</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="iconFileA">
+           <property name="text">
+            <string>Icon</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelFileA">
+           <property name="text">
+            <string>FileA</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="iconFileB">
+           <property name="text">
+            <string>Icon</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelFileB">
+           <property name="text">
+            <string>FileB</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-        </widget>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
         <layout class="QHBoxLayout" name="layoutTolerance">
@@ -76,19 +124,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <spacer name="spacerTopbarEnd">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </item>
      <item>
@@ -119,18 +154,11 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>465</width>
-            <height>545</height>
+            <width>511</width>
+            <height>552</height>
            </rect>
           </property>
          </widget>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="lineComparison">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
         </widget>
        </item>
        <item>
@@ -152,8 +180,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>465</width>
-            <height>545</height>
+            <width>510</width>
+            <height>552</height>
            </rect>
           </property>
          </widget>
@@ -169,7 +197,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>971</width>
+     <width>1052</width>
      <height>24</height>
     </rect>
    </property>

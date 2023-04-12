@@ -141,8 +141,6 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 
 void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
 {
-    qDebug("Display update started.");
-
     // Remove old data
     clearCsvGrids();
     // Setup headers again
@@ -151,6 +149,7 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
     // Now display data
     int maxRows = std::max(csvDataA.size(), csvDataB.size());
 
+    // TODO: More efficient way to populate UI when csv files get large
     for (int row = 0; row < maxRows; ++row)
     {
         // .value() will return and empty QStringList() if index out-of-bounds
@@ -169,7 +168,6 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
             gridB->addWidget(new QLabel(valB), row+1, col);
         }
     }
-    qDebug("Display update finished");
 
     // Trigger a diff
     triggerUpdate();
@@ -177,8 +175,11 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
 
 void MainWindow::displayDiff(QList<QPoint> diffPoints)
 {
+    lastDiffPoints.clear();
+    lastDiffPoints.append(diffPoints);
+
     // Go through each different item and highlight
-    for (QPoint p : diffPoints)
+    for (QPoint p : lastDiffPoints)
     {
         QLayoutItem* layoutItem;
 
@@ -225,19 +226,17 @@ void MainWindow::triggerUpdate()
 
 void MainWindow::resetHighlighting()
 {
-    // Even if data is different, the grids should be the same size
-    if (gridA->rowCount() != gridB->rowCount() ||
-        gridA->columnCount() != gridB->columnCount())
-        qFatal("Inconsistent grid sizes!");
-
-    // Reset the stylesheets
-    for (int row = 0; row < gridA->rowCount(); ++row)
+    for (QPoint p : lastDiffPoints)
     {
-        for (int col = 0; col < gridA->columnCount(); ++col)
-        {
-            gridA->itemAtPosition(row, col)->widget()->setStyleSheet("");
-            gridB->itemAtPosition(row, col)->widget()->setStyleSheet("");
-        }
+        QLayoutItem* layoutItem;
+
+        layoutItem = gridA->itemAtPosition(p.y(), p.x());
+        if (layoutItem != nullptr && layoutItem->widget() != nullptr)
+            layoutItem->widget()->setStyleSheet("");
+
+        layoutItem = gridB->itemAtPosition(p.y(), p.x());
+        if (layoutItem != nullptr && layoutItem->widget() != nullptr)
+            layoutItem->widget()->setStyleSheet("");
     }
 }
 

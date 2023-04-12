@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QThread>
 
+#include "table.h"
 #include "csv/csvcomparison.h"
 
 namespace Ui {
@@ -23,6 +24,7 @@ private:
     Ui::MainWindow *ui;
     QGridLayout *gridA;
     QGridLayout *gridB;
+    Table *tableA;
 
     void resizeEvent(QResizeEvent *event) override;
     void setupCsv();

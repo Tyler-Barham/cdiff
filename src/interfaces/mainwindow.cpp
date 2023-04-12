@@ -15,7 +15,10 @@ MainWindow::MainWindow(QWidget *parent) :
     gridA = new QGridLayout(ui->scrollContentsA);
     gridB = new QGridLayout(ui->scrollContentsB);
     ui->scrollContentsA->setLayout(gridA);
-    ui->scrollContentsB->setLayout(gridB);
+    //ui->scrollContentsB->setLayout(gridB);
+
+    //tableA = new Table(50, this);
+    //ui->layoutComparison->addWidget(tableA);
 
     // Setup file icons
     QPixmap csvPixmap = QPixmap(":/icons/csv.png").scaledToHeight(16, Qt::SmoothTransformation);
@@ -202,7 +205,10 @@ void MainWindow::triggerUpdate()
     QList<int> columnIndexes;
     for (int col = 0; col < gridA->columnCount(); ++col)
     {
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, col)->widget());
+        QLayoutItem *item = gridA->itemAtPosition(0, col);
+        if (item == 0 || item == nullptr)
+            continue;
+        QCheckBox *colHead = qobject_cast<QCheckBox*>(item->widget());
 
         if (colHead->isChecked())
             columnIndexes.append(col);
@@ -284,8 +290,13 @@ void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
     // This checkBox was clicked, change the state of all other checkboxes
     for (int col = 0; col < gridA->columnCount(); ++col)
     {
-        QCheckBox *colHeadA = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, col)->widget());
-        QCheckBox *colHeadB = qobject_cast<QCheckBox*>(gridB->itemAtPosition(0, col)->widget());
+        QLayoutItem *itemA = gridA->itemAtPosition(0, col);
+        QLayoutItem *itemB = gridA->itemAtPosition(0, col);
+        if (itemA == 0 || itemB == 0 || itemA == nullptr || itemB == nullptr)
+            continue;
+
+        QCheckBox *colHeadA = qobject_cast<QCheckBox*>(itemA->widget());
+        QCheckBox *colHeadB = qobject_cast<QCheckBox*>(itemB->widget());
 
         colHeadA->blockSignals(true);
         colHeadB->blockSignals(true);

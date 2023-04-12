@@ -11,11 +11,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Add gridLayouts to the scroll areas
     gridA = new QGridLayout(ui->scrollContentsA);
     gridB = new QGridLayout(ui->scrollContentsB);
     ui->scrollContentsA->setLayout(gridA);
     ui->scrollContentsB->setLayout(gridB);
 
+    // Setup file icons
     QPixmap csvPixmap = QPixmap(":/icons/csv.png").scaledToHeight(16, Qt::SmoothTransformation);
     ui->iconFileA->setPixmap(csvPixmap);
     ui->iconFileB->setPixmap(csvPixmap);
@@ -28,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    // Stop the thread
     csvThread->quit();
     csvThread->wait();
 
@@ -44,6 +47,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
 
+    // TODO: Resizing smaller than initial size work. Resizing larger expands some inner containers but not all?
     QRect rectCentral = ui->centralWidget->geometry();
     rectCentral.setWidth(event->size().width());
     rectCentral.setHeight(event->size().height());
@@ -66,11 +70,11 @@ void MainWindow::setupCsv()
     csvThread = new QThread();
     csvComparison->moveToThread(csvThread);
 
-    // Register cv::Mat so that it can be used in signals/slots
+    // Register QLists that we want to use in signals/slots
     qRegisterMetaType<QList<QStringList>>("QList<QStringList>");
     qRegisterMetaType<QList<QPoint>>("QList<QPoint>");
 
-    // General loading and displaying
+    // Connect loading and displaying
     connect(this, &MainWindow::loadCsv, csvComparison, &CsvComparison::loadCsv);
     connect(this, &MainWindow::updateDiff, csvComparison, &CsvComparison::updateDiff);
     connect(csvComparison, &CsvComparison::displayCsv, this, &MainWindow::displayCsv);
@@ -80,9 +84,10 @@ void MainWindow::setupCsv()
     csvThread->start();
 }
 
-/// Doesn't clear headers
 void MainWindow::clearCsvGrids()
 {
+    // Clears everything from the grids
+
     QLayoutItem *child;
     while ((child = gridA->takeAt(0)) != 0)
     {
@@ -100,6 +105,9 @@ void MainWindow::clearCsvGrids()
 
 void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 {
+    // Adds checkboxes for header columns
+
+    // Get initial state of checkboxes
     bool selectAll = ui->checkBoxAllCols->isChecked();
 
     int maxCols = std::max(headersA.size(), headersB.size());
@@ -108,14 +116,17 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
     {
         QString headA = headersA.value(col);
         QString headB = headersB.value(col);
+        // If different number of columns, one will be empty string
         if (headA == "") headA = headB;
         if (headB == "") headB = headA;
+        // If headers are different, show the same for both
         if (headA != headB)
         {
             headA = QString("%1 | %2").arg(headA).arg(headB);
             headB = headA;
         }
 
+        // Populate UI items
         QCheckBox *colHeadA = new QCheckBox(headA);
         QCheckBox *colHeadB = new QCheckBox(headB);
         colHeadA->setChecked(selectAll);
@@ -130,7 +141,11 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 
 void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
 {
+    qDebug("Display update started.");
+
+    // Remove old data
     clearCsvGrids();
+    // Setup headers again
     displayHeaders(csvDataA.takeFirst(), csvDataB.takeFirst());
 
     // Now display data
@@ -154,12 +169,15 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
             gridB->addWidget(new QLabel(valB), row+1, col);
         }
     }
+    qDebug("Display update finished");
 
+    // Trigger a diff
     triggerUpdate();
 }
 
 void MainWindow::displayDiff(QList<QPoint> diffPoints)
 {
+    // Go through each different item and highlight
     for (QPoint p : diffPoints)
     {
         QLayoutItem* layoutItem;
@@ -176,7 +194,10 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
 
 void MainWindow::triggerUpdate()
 {
+    // Read the threshhold
     double thresh = ui->inputTolerance->value();
+
+    // Get columns that are checked
     QList<int> columnIndexes;
     for (int col = 0; col < gridA->columnCount(); ++col)
     {
@@ -186,6 +207,7 @@ void MainWindow::triggerUpdate()
             columnIndexes.append(col);
     }
 
+    // Set the selectAll checkbox state depending on the number of columns checked
     if (columnIndexes.size() == gridA->columnCount())
         ui->checkBoxAllCols->setCheckState(Qt::CheckState::Checked);
     else if (columnIndexes.size() == 0)
@@ -197,6 +219,7 @@ void MainWindow::triggerUpdate()
     emit updateDiff(thresh, columnIndexes);
 
     // Reset higlighting while the diff thread is working
+    // The DisplayDiff slot may be triggered before we finish highlighting, but cannot execute until after
     resetHighlighting();
 }
 
@@ -207,6 +230,7 @@ void MainWindow::resetHighlighting()
         gridA->columnCount() != gridB->columnCount())
         qFatal("Inconsistent grid sizes!");
 
+    // Reset the stylesheets
     for (int row = 0; row < gridA->rowCount(); ++row)
     {
         for (int col = 0; col < gridA->columnCount(); ++col)
@@ -220,7 +244,6 @@ void MainWindow::resetHighlighting()
 void MainWindow::on_inputTolerance_valueChanged(double arg1)
 {
     Q_UNUSED(arg1)
-
     triggerUpdate();
 }
 
@@ -228,10 +251,12 @@ void MainWindow::onCheckboxStateChanged(int state)
 {
     Q_UNUSED(state);
 
+    // Find which checkbox triggered this slot
     QWidget *header = qobject_cast<QWidget*>(sender());
     int idxA = gridA->indexOf(header);
     int idxB = gridB->indexOf(header);
 
+    // Get the checkbox from the other grid and toggle it so that both sides have the same state
     if (idxA > -1)
     {
         QCheckBox *colHead = qobject_cast<QCheckBox*>(gridB->itemAtPosition(0, idxA)->widget());
@@ -257,7 +282,7 @@ void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
     // A column header was clicked
     if (state == Qt::CheckState::PartiallyChecked) return;
 
-    // This checkBox was clicked
+    // This checkBox was clicked, change the state of all other checkboxes
     for (int col = 0; col < gridA->columnCount(); ++col)
     {
         QCheckBox *colHeadA = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, col)->widget());
@@ -278,6 +303,7 @@ void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
 
 void MainWindow::on_btnSelectFiles_clicked()
 {
+    // Read in user-selected files
     QString pathA = QFileDialog::getOpenFileName(this, tr("Select fileA"), lastPath, "CSV (*.csv)");
     if (pathA.isEmpty())
         return;
@@ -288,8 +314,10 @@ void MainWindow::on_btnSelectFiles_clicked()
         return;
     lastPath = pathB;
 
+    // Update the labels with filenames
     ui->labelFileA->setText(pathA.split('/').last());
     ui->labelFileB->setText(pathB.split('/').last());
 
+    // Trigger a reload of data
     emit loadCsv(pathA, pathB, delim);
 }

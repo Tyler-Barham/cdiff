@@ -34,7 +34,7 @@ private:
     CsvComparison *csvComparison;
     QThread *csvThread;
 
-    int fDataRow;
+    QString lastPath;
     char delim;
 
 private slots:

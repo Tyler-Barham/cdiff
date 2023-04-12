@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->iconFileB->setPixmap(csvPixmap);
 
     delim = ',';
+    lastPath = QString(".");
 
     setupCsv();
 }
@@ -163,11 +164,11 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
     {
         QLayoutItem* layoutItem;
 
-        layoutItem = gridA->itemAtPosition(fDataRow+p.y(), p.x());
+        layoutItem = gridA->itemAtPosition(p.y(), p.x());
         if (layoutItem != nullptr && layoutItem->widget() != nullptr)
             layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
 
-        layoutItem = gridB->itemAtPosition(fDataRow+p.y(), p.x());
+        layoutItem = gridB->itemAtPosition(p.y(), p.x());
         if (layoutItem != nullptr && layoutItem->widget() != nullptr)
             layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
     }
@@ -277,8 +278,15 @@ void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
 
 void MainWindow::on_btnSelectFiles_clicked()
 {
-    QString pathA = QFileDialog::getOpenFileName(this, tr("Select fileA"), ".", "CSV (*.csv)");
-    QString pathB = QFileDialog::getOpenFileName(this, tr("Select fileB"), ".", "CSV (*.csv)");
+    QString pathA = QFileDialog::getOpenFileName(this, tr("Select fileA"), lastPath, "CSV (*.csv)");
+    if (pathA.isEmpty())
+        return;
+    lastPath = pathA;
+
+    QString pathB = QFileDialog::getOpenFileName(this, tr("Select fileB"), lastPath, "CSV (*.csv)");
+    if (pathB.isEmpty())
+        return;
+    lastPath = pathB;
 
     ui->labelFileA->setText(pathA.split('/').last());
     ui->labelFileB->setText(pathB.split('/').last());

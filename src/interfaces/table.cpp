@@ -2,6 +2,10 @@
 
 TableRowWidget::TableRowWidget(QWidget *parent) : QWidget(parent)
 {
+    defaultStyle = QString("border-width: 1px;"
+                            "border-style: solid;"
+                            "border-color: black;");
+
     // Setup layout
     _rowLayout = new QHBoxLayout(this);
     _rowLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
@@ -10,8 +14,21 @@ TableRowWidget::TableRowWidget(QWidget *parent) : QWidget(parent)
     setLayout(_rowLayout);
 }
 
+TableRowWidget::~TableRowWidget()
+{
+    for (int i = 0; i < _columns.size(); ++i)
+        delete _columns[i];
+    _columns.clear();
+
+    delete _rowLayout;
+}
+
 void TableRowWidget::updateRowData(QStringList data)
 {
+    // convert data to map of [col]=isDiff??
+    //QString currStyle = defaultStyle;
+    //currStyle.append("background-color : rgba(0,0,255,75);");
+
     // Ensure at least one element
     if (data.isEmpty()) data.append("");
 
@@ -32,10 +49,7 @@ void TableRowWidget::updateRowData(QStringList data)
             lbl = new QLabel(this);
             lbl->setAlignment(Qt::AlignLeft);
             lbl->setFixedSize(tableHeaderTimeWidth, cellWidgetHeight);
-            lbl->setStyleSheet(
-                "border-width: 1px;"
-                "border-style: solid;"
-                "border-color: black;");
+            lbl->setStyleSheet(defaultStyle);
 
             _columns.append(lbl);
             _rowLayout->addWidget(lbl);
@@ -63,6 +77,18 @@ Table::Table(QWidget *parent) : QWidget(parent)
     initHeader();
 
     setLayout(_mainGLayout);
+}
+
+Table::~Table()
+{
+    for (int i = 0; i < _rows.size(); ++i)
+        delete _rows[i];
+    _rows.clear();
+
+    delete _header;
+    delete _scrollBar;
+    delete _innerVLayout;
+    delete _mainGLayout;
 }
 
 void Table::onScrollTableUpdate(int min, int max)

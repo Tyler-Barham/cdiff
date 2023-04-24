@@ -32,18 +32,22 @@ class TableRowWidget : public QWidget
 {
 public:
     TableRowWidget(QWidget *parent = nullptr);
+    ~TableRowWidget();
 
     void updateRowData(QStringList data);
 
 private:
     QHBoxLayout *_rowLayout;
     QList<QLabel*> _columns;
+
+    QString defaultStyle;
 };
 
 class Table : public QWidget
 {
 public:
     Table(QWidget *parent = nullptr);
+    ~Table();
 
     virtual void resizeEvent(QResizeEvent *event) override;
     virtual void wheelEvent(QWheelEvent *event) override;

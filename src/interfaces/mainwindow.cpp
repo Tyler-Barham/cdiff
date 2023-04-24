@@ -11,12 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Add gridLayouts to the scroll areas
-    //gridA = new QGridLayout(ui->scrollContentsA);
-    //gridB = new QGridLayout(ui->scrollContentsB);
-    //ui->scrollContentsA->setLayout(gridA);
-    //ui->scrollContentsB->setLayout(gridB);
-
+    // Scrollable UI elements
     tableA = new Table(this);
     ui->layoutComparison->addWidget(tableA);
     tableB = new Table(this);
@@ -44,8 +39,6 @@ MainWindow::~MainWindow()
 
     delete tableA;
     delete tableB;
-    //delete gridA;
-    //delete gridB;
 
     delete ui;
 }
@@ -93,61 +86,25 @@ void MainWindow::setupCsv()
 
 void MainWindow::clearCsvGrids()
 {
-    return;
-    // Clears everything from the grids
-
-    QLayoutItem *child;
-    while ((child = gridA->takeAt(0)) != 0)
-    {
-        child->widget()->hide();
-        gridA->removeItem(child);
-        delete child;
-    }
-    while ((child = gridB->takeAt(0)) != 0)
-    {
-        child->widget()->hide();
-        gridB->removeItem(child);
-        delete child;
-    }
+    // TODO: Setup for table class
 }
 
 void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 {
     tableA->setHeaders(headersA);
     tableB->setHeaders(headersB);
-    return;
-    // Adds checkboxes for header columns
+    // TODO: Add checkboxes to table headers and connect to selectAll checkbox
 
+    /*
     // Get initial state of checkboxes
     bool selectAll = ui->checkBoxAllCols->isChecked();
 
-    int maxCols = std::max(headersA.size(), headersB.size());
-
-    for (int col = 0; col < maxCols; ++col)
-    {
-        QString headA = headersA.value(col);
-        QString headB = headersB.value(col);
-        // If different number of columns, one will be empty string
-        if (headA == "") headA = headB;
-        if (headB == "") headB = headA;
-        // If headers are different, show the same for both
-        if (headA != headB)
-        {
-            headA = QString("%1 | %2").arg(headA).arg(headB);
-            headB = headA;
-        }
-
-        // Populate UI items
-        QCheckBox *colHeadA = new QCheckBox(headA);
-        QCheckBox *colHeadB = new QCheckBox(headB);
+    foreach column
+        ...
         colHeadA->setChecked(selectAll);
-        colHeadB->setChecked(selectAll);
         connect(colHeadA, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
-        connect(colHeadB, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
-
-        gridA->addWidget(colHeadA, 0, col);
-        gridB->addWidget(colHeadB, 0, col);
-    }
+        ...->addWidget(colHeadA, 0, col);
+    */
 }
 
 void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
@@ -159,30 +116,6 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
 
     tableA->setData(csvDataA);
     tableB->setData(csvDataB);
-    return;
-
-    // Now display data
-    int maxRows = std::max(csvDataA.size(), csvDataB.size());
-
-    // TODO: More efficient way to populate UI when csv files get large
-    for (int row = 0; row < maxRows; ++row)
-    {
-        // .value() will return and empty QStringList() if index out-of-bounds
-        QStringList rowA = csvDataA.value(row);
-        QStringList rowB = csvDataB.value(row);
-
-        int maxCols = std::max(rowA.size(), rowB.size());
-
-        for (int col = 0; col < maxCols; ++col)
-        {
-            // .value() will return and empty QString() if index out-of-bounds
-            QString valA = rowA.value(col);
-            QString valB = rowB.value(col);
-
-            gridA->addWidget(new QLabel(valA), row+1, col); // +1 as we popped the first row as headers
-            gridB->addWidget(new QLabel(valB), row+1, col);
-        }
-    }
 
     // Trigger a diff
     triggerUpdate();
@@ -193,19 +126,7 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
     lastDiffPoints.clear();
     lastDiffPoints.append(diffPoints);
 
-    // Go through each different item and highlight
-    for (QPoint p : lastDiffPoints)
-    {
-        QLayoutItem* layoutItem;
-
-        layoutItem = gridA->itemAtPosition(p.y(), p.x());
-        if (layoutItem != nullptr && layoutItem->widget() != nullptr)
-            layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
-
-        layoutItem = gridB->itemAtPosition(p.y(), p.x());
-        if (layoutItem != nullptr && layoutItem->widget() != nullptr)
-            layoutItem->widget()->setStyleSheet("QWidget { background-color : rgba(0,0,255,75); }");
-    }
+    // TODO: Setup for table class
 }
 
 void MainWindow::triggerUpdate()
@@ -215,47 +136,20 @@ void MainWindow::triggerUpdate()
 
     // Get columns that are checked
     QList<int> columnIndexes;
-    for (int col = 0; col < gridA->columnCount(); ++col)
-    {
-        QLayoutItem *item = gridA->itemAtPosition(0, col);
-        if (item == 0 || item == nullptr)
-            continue;
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(item->widget());
 
+    // TODO: Setup for table class
+    /*
+    foreach columnHeader
         if (colHead->isChecked())
             columnIndexes.append(col);
-    }
-
     // Set the selectAll checkbox state depending on the number of columns checked
-    if (columnIndexes.size() == gridA->columnCount())
-        ui->checkBoxAllCols->setCheckState(Qt::CheckState::Checked);
-    else if (columnIndexes.size() == 0)
-        ui->checkBoxAllCols->setCheckState(Qt::CheckState::Unchecked);
-    else
-        ui->checkBoxAllCols->setCheckState(Qt::CheckState::PartiallyChecked);
+    */
 
     // Trigger a diff update
     emit updateDiff(thresh, columnIndexes);
 
     // Reset higlighting while the diff thread is working
     // The DisplayDiff slot may be triggered before we finish highlighting, but cannot execute until after
-    resetHighlighting();
-}
-
-void MainWindow::resetHighlighting()
-{
-    for (QPoint p : lastDiffPoints)
-    {
-        QLayoutItem* layoutItem;
-
-        layoutItem = gridA->itemAtPosition(p.y(), p.x());
-        if (layoutItem != nullptr && layoutItem->widget() != nullptr)
-            layoutItem->widget()->setStyleSheet("");
-
-        layoutItem = gridB->itemAtPosition(p.y(), p.x());
-        if (layoutItem != nullptr && layoutItem->widget() != nullptr)
-            layoutItem->widget()->setStyleSheet("");
-    }
 }
 
 void MainWindow::on_inputTolerance_valueChanged(double arg1)
@@ -268,58 +162,27 @@ void MainWindow::onCheckboxStateChanged(int state)
 {
     Q_UNUSED(state);
 
+    // TODO: Setup for table class
+    /*
     // Find which checkbox triggered this slot
-    QWidget *header = qobject_cast<QWidget*>(sender());
-    int idxA = gridA->indexOf(header);
-    int idxB = gridB->indexOf(header);
-
     // Get the checkbox from the other grid and toggle it so that both sides have the same state
-    if (idxA > -1)
-    {
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(gridB->itemAtPosition(0, idxA)->widget());
-        colHead->setCheckState(static_cast<Qt::CheckState>(state));
-    }
-    else if (idxB > -1)
-    {
-        QCheckBox *colHead = qobject_cast<QCheckBox*>(gridA->itemAtPosition(0, idxB)->widget());
-        colHead->setCheckState(static_cast<Qt::CheckState>(state));
-    }
-    else
-    {
-        qFatal("Both sides of comparison should have same number of columns but don't!");
-    }
-
+    */
     triggerUpdate();
 }
 
 void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
 {
+    // TODO: Setup for table class
+
+    /*
     Qt::CheckState state = static_cast<Qt::CheckState>(arg1);
-
-    // A column header was clicked
-    if (state == Qt::CheckState::PartiallyChecked) return;
-
-    // This checkBox was clicked, change the state of all other checkboxes
-    for (int col = 0; col < gridA->columnCount(); ++col)
-    {
-        QLayoutItem *itemA = gridA->itemAtPosition(0, col);
-        QLayoutItem *itemB = gridA->itemAtPosition(0, col);
-        if (itemA == 0 || itemB == 0 || itemA == nullptr || itemB == nullptr)
-            continue;
-
-        QCheckBox *colHeadA = qobject_cast<QCheckBox*>(itemA->widget());
-        QCheckBox *colHeadB = qobject_cast<QCheckBox*>(itemB->widget());
-
-        colHeadA->blockSignals(true);
-        colHeadB->blockSignals(true);
-
-        colHeadA->setCheckState(state);
-        colHeadB->setCheckState(state);
-
-        colHeadA->blockSignals(false);
-        colHeadB->blockSignals(false);
-    }
-
+    if (state == Qt::CheckState::PartiallyChecked) return; // A column header was clicked
+    else
+        foreach...
+            colHeadA->blockSignals(true);
+            colHeadA->setCheckState(state);
+            colHeadA->blockSignals(false);
+    */
     triggerUpdate();
 }
 

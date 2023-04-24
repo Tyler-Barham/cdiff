@@ -22,8 +22,6 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QGridLayout *gridA;
-    QGridLayout *gridB;
     Table *tableA;
     Table *tableB;
 
@@ -32,7 +30,6 @@ private:
     void displayHeaders(QStringList headersA, QStringList headersB);
     void clearCsvGrids();
     void triggerUpdate();
-    void resetHighlighting();
 
     CsvComparison *csvComparison;
     QThread *csvThread;

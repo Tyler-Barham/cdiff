@@ -12,13 +12,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // Add gridLayouts to the scroll areas
-    gridA = new QGridLayout(ui->scrollContentsA);
-    gridB = new QGridLayout(ui->scrollContentsB);
-    ui->scrollContentsA->setLayout(gridA);
+    //gridA = new QGridLayout(ui->scrollContentsA);
+    //gridB = new QGridLayout(ui->scrollContentsB);
+    //ui->scrollContentsA->setLayout(gridA);
     //ui->scrollContentsB->setLayout(gridB);
 
-    //tableA = new Table(50, this);
-    //ui->layoutComparison->addWidget(tableA);
+    tableA = new Table(this);
+    ui->layoutComparison->addWidget(tableA);
+    tableB = new Table(this);
+    ui->layoutComparison->addWidget(tableB);
 
     // Setup file icons
     QPixmap csvPixmap = QPixmap(":/icons/csv.png").scaledToHeight(16, Qt::SmoothTransformation);
@@ -40,8 +42,10 @@ MainWindow::~MainWindow()
     delete csvComparison;
     delete csvThread;
 
-    delete gridA;
-    delete gridB;
+    delete tableA;
+    delete tableB;
+    //delete gridA;
+    //delete gridB;
 
     delete ui;
 }
@@ -89,6 +93,7 @@ void MainWindow::setupCsv()
 
 void MainWindow::clearCsvGrids()
 {
+    return;
     // Clears everything from the grids
 
     QLayoutItem *child;
@@ -108,6 +113,9 @@ void MainWindow::clearCsvGrids()
 
 void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 {
+    tableA->setHeaders(headersA);
+    tableB->setHeaders(headersB);
+    return;
     // Adds checkboxes for header columns
 
     // Get initial state of checkboxes
@@ -148,6 +156,10 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
     clearCsvGrids();
     // Setup headers again
     displayHeaders(csvDataA.takeFirst(), csvDataB.takeFirst());
+
+    tableA->setData(csvDataA);
+    tableB->setData(csvDataB);
+    return;
 
     // Now display data
     int maxRows = std::max(csvDataA.size(), csvDataB.size());

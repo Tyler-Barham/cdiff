@@ -25,6 +25,7 @@ private:
     QGridLayout *gridA;
     QGridLayout *gridB;
     Table *tableA;
+    Table *tableB;
 
     void resizeEvent(QResizeEvent *event) override;
     void setupCsv();

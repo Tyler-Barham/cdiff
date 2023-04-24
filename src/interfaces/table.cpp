@@ -1,114 +1,52 @@
 #include "table.h"
 
-HeaderWidget::HeaderWidget(QWidget *parent) : QWidget(parent)
+TableRowWidget::TableRowWidget(QWidget *parent) : QWidget(parent)
 {
-    QHBoxLayout *layout = new QHBoxLayout();
-    layout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
-    layout->setContentsMargins({});
-    layout->setSpacing(0);
-
-    // Blank
-    _blank.reset(new QWidget(this));
-    _blank->setFixedSize(tableHeaderNumberWidth, cellWidgetHeight);
-    _blank->setStyleSheet("background-color: grey;");
-    layout->addWidget(_blank.data());
-
-    // Time
-    _time.reset(new QLabel(this));
-    _time->setText("Time");
-    //    _time->setFixedHeight(buttonHeight);
-    _time->setFixedSize(tableHeaderTimeWidth, cellWidgetHeight);
-    _time->setStyleSheet(
-        "border-width: 1px;"
-        "border-style: solid;"
-        "border-bottom-style: none;"
-        "border-color: black;");
-    layout->addWidget(_time.data());
-
-    //     Duration
-    _duration.reset(new QLabel(this));
-    _duration->setText("Duration");
-    //    _time->setFixedHeight(buttonHeight);
-    _duration->setFixedSize(tableHeaderDurationWidth, cellWidgetHeight);
-    _duration->setStyleSheet(
-        "border-width: 1px;"
-        "border-style: solid;"
-        "border-bottom-style: none;"
-        "border-color: black;");
-    layout->addWidget(_duration.data());
-
-    // State
-    _state.reset(new QLabel(this));
-    _state->setText("State");
-    //    _time->setFixedHeight(buttonHeight);
-    _state->setFixedSize(tableHeaderStateWidth, cellWidgetHeight);
-    _state->setStyleSheet(
-        "border-width: 1px;"
-        "border-style: solid;"
-        "border-bottom-style: none;"
-        "border-color: black;");
-    layout->addWidget(_state.data());
-
-    setLayout(layout);
+    // Setup layout
+    _rowLayout = new QHBoxLayout(this);
+    _rowLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    _rowLayout->setContentsMargins(QMargins());
+    _rowLayout->setSpacing(0);
+    setLayout(_rowLayout);
 }
 
-CellWidget::CellWidget(const QString &time, QWidget *parent) : QWidget(parent)
+void TableRowWidget::updateRowData(QStringList data)
 {
-    QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
-    layout->setContentsMargins(QMargins());
-    layout->setSpacing(0);
+    // Ensure at least one element
+    if (data.isEmpty()) data.append("");
 
-    // Number
-    _number.reset(new QLabel(this));
-    _number->setText(time);
-    _number->setAlignment(Qt::AlignCenter);
-    _number->setFixedSize(tableHeaderNumberWidth, cellWidgetHeight);
-    _number->setStyleSheet(
-        "border-width: 1px;"
-        "border-style: solid;"
-        "border-right-style: none;"
-        "border-bottom-style: none;"
-        "border-color: black;");
-    layout->addWidget(_number.data());
+    int maxCols = std::max(data.size(), _columns.size());
 
-    // Time
-    _time.reset(new QLabel(this));
-    _time->setText(time);
-    _time->setAlignment(Qt::AlignLeft);
+    for (int col = 0; col < maxCols; ++col)
+    {
+        QLabel *lbl = Q_NULLPTR;
 
-    //    _time->setFrameShape(QFrame::StyledPanel);
+        // Get the label to be updated
+        if (col < _columns.size())
+        {
+            lbl = _columns[col];
+        }
+        // Create a new label
+        else
+        {
+            lbl = new QLabel(this);
+            lbl->setAlignment(Qt::AlignLeft);
+            lbl->setFixedSize(tableHeaderTimeWidth, cellWidgetHeight);
+            lbl->setStyleSheet(
+                "border-width: 1px;"
+                "border-style: solid;"
+                "border-color: black;");
 
-    //    _time->setFixedHeight(buttonHeight);
-    _time->setFixedSize(tableHeaderTimeWidth, cellWidgetHeight);
-    _time->setStyleSheet(
-        "border-width: 1px;"
-        "border-style: solid;"
-        "border-right-style: none;"
-        "border-bottom-style: none;"
-        "border-color: black;");
-    layout->addWidget(_time.data());
+            _columns.append(lbl);
+            _rowLayout->addWidget(lbl);
+        }
 
-    //     Duration
-    _duration.reset(new QSpinBox(this));
-    _duration->setMinimum(0);
-    _duration->setMaximum(1000);
-    _duration->setValue(100);
-    _duration->setFixedSize(tableHeaderDurationWidth, cellWidgetHeight);
-    layout->addWidget(_duration.data());
-
-    // State
-    _state.reset(new QPushButton(this));
-    _state->setText("State");
-    _state->setFixedSize(tableHeaderStateWidth, cellWidgetHeight);
-    layout->addWidget(_state.data());
-
-    setLayout(layout);
+        // Update
+        lbl->setText(data.value(col));
+    }
 }
 
-void CellWidget::setText(const QString &text) { _time->setText(text); }
-
-Table::Table(size_t size, QWidget *parent) : QWidget(parent), _size(size)
+Table::Table(QWidget *parent) : QWidget(parent)
 {
     setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
     setMinimumHeight(tableMinimalHeight);
@@ -131,15 +69,16 @@ void Table::onScrollTableUpdate(int min, int max)
 {
     // Round bottom border
     max -= max % tableRowHeight;
+
     // Add widgets to layout
-    for (int i = 0, pos = min; pos < max - tableLayoutHeightReserve && i < _widgets.size();
-         ++i, pos += tableRowHeight)
+    for (int rowIdx = 0, pos = min; pos < max - tableLayoutHeightReserve && rowIdx < _rows.size();
+         ++rowIdx, pos += tableRowHeight)
     {
-        const int index = pos / tableRowHeight;
-        if (index >= _size)
+        const int dataIdx = pos / tableRowHeight;
+        if (dataIdx >= _data.size())
             break;
 
-        _widgets[i]->setText(QString::number(index));
+        _rows[rowIdx]->updateRowData(_data.value(dataIdx));
     }
 }
 
@@ -156,17 +95,34 @@ void Table::resizeEvent(QResizeEvent *event)
         onTableResize(_scrollBar->value(), _scrollBar->value() + widgetHeight);
 }
 
-void Table::wheelEvent(QWheelEvent *event) { _scrollBar->event(event); }
+void Table::wheelEvent(QWheelEvent *event)
+{
+    _scrollBar->event(event);
+}
+
+void Table::setHeaders(QStringList headers)
+{
+    _header->updateRowData(headers);
+}
+
+void Table::setData(QList<QStringList> data)
+{
+    _data = data;
+
+    const int widgetHeight = this->height() - tableHeaderHeight;
+    updateScrollBar(widgetHeight);
+    onTableResize(_scrollBar->value(), _scrollBar->value() + widgetHeight);
+}
 
 void Table::initScrollBar()
 {
-    _scrollBar.reset(new QScrollBar(this));
+    _scrollBar = new QScrollBar(this);
     _scrollBar->setSingleStep(tableRowHeight);
     _scrollBar->setPageStep(tableRowHeight);
 
-    _mainGLayout->addWidget(_scrollBar.data(), 0, 1);
+    _mainGLayout->addWidget(_scrollBar, 0, 1);
 
-    connect(_scrollBar.data(), &QScrollBar::valueChanged, this,
+    connect(_scrollBar, &QScrollBar::valueChanged, this,
             [&](int pos) { return onScrollTableUpdate(pos, pos + this->height()); });
 
     updateScrollBar(this->height());
@@ -174,18 +130,18 @@ void Table::initScrollBar()
 
 void Table::initHeader()
 {
-    _header.reset(new HeaderWidget(this));
-    _innerVLayout->addWidget(_header.data());
+    _header = new TableRowWidget(this);
+    _innerVLayout->addWidget(_header);
 }
 
 void Table::initWidgetRows(int height)
 {
-    // Calculate max buttons number depending on screen
+    // Calculate max rows depending on screen
     const auto screens = QGuiApplication::screens();
     int _maxWidgetNumber = 0;
-    for (int i = 0; i < screens.size(); ++i)
+    for (int screenIdx = 0; screenIdx < screens.size(); ++screenIdx)
     {
-        const int temp = screens[i]->geometry().height() / tableRowHeight;
+        const int temp = screens[screenIdx]->geometry().height() / tableRowHeight;
         if (temp > _maxWidgetNumber)
             _maxWidgetNumber = temp;
     }
@@ -193,17 +149,15 @@ void Table::initWidgetRows(int height)
     // Round bottom border
     height -= height % tableRowHeight;
     // Add new widgets
-    for (int i = 0, pos = 0; i < _maxWidgetNumber; ++i, pos += tableRowHeight)
+    for (int rowIdx = 0, pos = 0; rowIdx < _maxWidgetNumber; ++rowIdx, pos += tableRowHeight)
     {
-        //_widgets.push_back(std::make_unique<CellWidget>(QString::number(i), this));
-        _widgets.push_back(new CellWidget(QString::number(i), this));
-        //
-        //        _widgets.back()->setFixedSize(cellWidgetWidth, tableRowHeight);
-        //
-        _widgets.back()->setMinimumHeight(1);
-        _innerVLayout->addWidget(_widgets.back());
-        if (pos >= height - tableLayoutHeightReserve || i >= _size)
-            _widgets[i]->hide();
+        TableRowWidget *tRow = new TableRowWidget(this);
+        tRow->updateRowData(QStringList());
+        _rows.append(tRow);
+        _rows.back()->setMinimumHeight(1);
+        _innerVLayout->addWidget(_rows.back());
+        if (pos >= height - tableLayoutHeightReserve || rowIdx >= _data.size())
+            _rows.back()->hide();
     }
 
     isInitialized = true;
@@ -214,23 +168,23 @@ void Table::onTableResize(int newMin, int newMax)
     blockSignals(true);
 
     // Remove widgets from layout
-    for (int i = 0; i < _widgets.size(); ++i)
+    for (int rowIdx = 0; rowIdx < _rows.size(); ++rowIdx)
     {
-        _widgets[i]->hide();
+        _rows[rowIdx]->hide();
     }
 
     // Round bottom border
     newMax -= newMax % tableRowHeight;
     //    Add widgets to layout
-    for (int i = 0, pos = newMin; i < _widgets.size() && pos < newMax - tableLayoutHeightReserve;
-         ++i, pos += tableRowHeight)
+    for (int rowIdx = 0, pos = newMin; rowIdx < _rows.size() && pos < newMax - tableLayoutHeightReserve;
+         ++rowIdx, pos += tableRowHeight)
     {
-        const int index = pos / tableRowHeight;
-        if (index >= _size)
+        const int dataIdx = pos / tableRowHeight;
+        if (dataIdx >= _data.size())
             break;
 
-        _widgets[i]->setText(QString::number(index));
-        _widgets[i]->show();
+        _rows[rowIdx]->updateRowData(_data.at(dataIdx));
+        _rows[rowIdx]->show();
     }
 
     blockSignals(false);
@@ -238,7 +192,7 @@ void Table::onTableResize(int newMin, int newMax)
 
 void Table::updateScrollBar(int height)
 {
-    int scrollBarMax = _size * tableRowHeight - height + tableLayoutHeightReserve;
+    int scrollBarMax = _data.size() * tableRowHeight - height + tableLayoutHeightReserve;
 
     //  Hide when there are too little widgets
     if (scrollBarMax <= 0)

@@ -4,11 +4,10 @@
 #include <QGridLayout>
 #include <QGuiApplication>
 #include <QLabel>
-#include <QPushButton>
+#include <QCheckBox>
 #include <QResizeEvent>
 #include <QScreen>
 #include <QScrollBar>
-#include <QSpinBox>
 #include <QList>
 
 namespace
@@ -28,6 +27,7 @@ constexpr int tableHeaderDurationWidth = 73;
 constexpr int tableHeaderStateWidth = 55;
 } // namespace
 
+template <typename WidgetType>
 class TableRowWidget : public QWidget
 {
 public:
@@ -38,7 +38,7 @@ public:
 
 private:
     QHBoxLayout *_rowLayout;
-    QList<QLabel*> _columns;
+    QList<WidgetType*> _columns;
 
     QString defaultStyle;
 };
@@ -64,8 +64,8 @@ private:
     void updateScrollBar(int height);
 
     QScrollBar *_scrollBar = nullptr;
-    TableRowWidget *_header = nullptr;
-    QList<TableRowWidget*> _rows;
+    TableRowWidget<QCheckBox> *_header = nullptr;
+    QList<TableRowWidget<QLabel>*> _rows;
     QVBoxLayout *_innerVLayout = nullptr;
     QGridLayout *_mainGLayout = nullptr;
     bool isInitialized = false;

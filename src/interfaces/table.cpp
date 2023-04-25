@@ -1,6 +1,7 @@
 #include "table.h"
 
-TableRowWidget::TableRowWidget(QWidget *parent) : QWidget(parent)
+template <typename WidgetType>
+TableRowWidget<WidgetType>::TableRowWidget(QWidget *parent) : QWidget(parent)
 {
     defaultStyle = QString("border-width: 1px;"
                             "border-style: solid;"
@@ -14,7 +15,8 @@ TableRowWidget::TableRowWidget(QWidget *parent) : QWidget(parent)
     setLayout(_rowLayout);
 }
 
-TableRowWidget::~TableRowWidget()
+template <typename WidgetType>
+TableRowWidget<WidgetType>::~TableRowWidget()
 {
     for (int i = 0; i < _columns.size(); ++i)
         delete _columns[i];
@@ -23,7 +25,8 @@ TableRowWidget::~TableRowWidget()
     delete _rowLayout;
 }
 
-void TableRowWidget::updateRowData(QStringList data)
+template <typename WidgetType>
+void TableRowWidget<WidgetType>::updateRowData(QStringList data)
 {
     // convert data to map of [col]=isDiff??
     //QString currStyle = defaultStyle;
@@ -36,7 +39,7 @@ void TableRowWidget::updateRowData(QStringList data)
 
     for (int col = 0; col < maxCols; ++col)
     {
-        QLabel *lbl = Q_NULLPTR;
+        WidgetType *lbl = Q_NULLPTR;
 
         // Get the label to be updated
         if (col < _columns.size())
@@ -46,8 +49,7 @@ void TableRowWidget::updateRowData(QStringList data)
         // Create a new label
         else
         {
-            lbl = new QLabel(this);
-            lbl->setAlignment(Qt::AlignLeft);
+            lbl = new WidgetType(this);
             lbl->setFixedSize(tableHeaderTimeWidth, cellWidgetHeight);
             lbl->setStyleSheet(defaultStyle);
 
@@ -156,7 +158,7 @@ void Table::initScrollBar()
 
 void Table::initHeader()
 {
-    _header = new TableRowWidget(this);
+    _header = new TableRowWidget<QCheckBox>(this);
     _innerVLayout->addWidget(_header);
 }
 
@@ -177,7 +179,7 @@ void Table::initWidgetRows(int height)
     // Add new widgets
     for (int rowIdx = 0, pos = 0; rowIdx < _maxWidgetNumber; ++rowIdx, pos += tableRowHeight)
     {
-        TableRowWidget *tRow = new TableRowWidget(this);
+        TableRowWidget<QLabel> *tRow = new TableRowWidget<QLabel>(this);
         tRow->updateRowData(QStringList());
         _rows.append(tRow);
         _rows.back()->setMinimumHeight(1);

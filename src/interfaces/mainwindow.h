@@ -33,7 +33,6 @@ private:
     CsvComparison *csvComparison;
     QThread *csvThread;
 
-    QList<QPoint> lastDiffPoints;
     QString lastPath;
     char delim;
 

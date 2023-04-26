@@ -85,6 +85,11 @@ void Table::setData(QList<QStringList> data)
     onTableResize(scrollBar->value(), scrollBar->value() + dataHeight);
 }
 
+void Table::updateDiff(QList<QPoint> diffPoints)
+{
+    // TODO
+}
+
 void Table::initScrollBar()
 {
     scrollBar = new QScrollBar(this);

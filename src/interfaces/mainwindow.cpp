@@ -102,10 +102,8 @@ void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvD
 
 void MainWindow::displayDiff(QList<QPoint> diffPoints)
 {
-    lastDiffPoints.clear();
-    lastDiffPoints.append(diffPoints);
-
-    // TODO: Setup for table class
+    tableA->updateDiff(diffPoints);
+    tableB->updateDiff(diffPoints);
 }
 
 void MainWindow::triggerUpdate()

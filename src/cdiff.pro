@@ -26,14 +26,16 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    interfaces/mainwindow.cpp \
+    interfaces/tablerow.cpp \
     interfaces/table.cpp \
+    interfaces/mainwindow.cpp \
     csv/csvdata.cpp \
     csv/csvcomparison.cpp
 
 HEADERS += \
-    interfaces/mainwindow.h \
+    interfaces/tablerow.h \
     interfaces/table.h \
+    interfaces/mainwindow.h \
     csv/csvdata.h \
     csv/csvcomparison.h
 

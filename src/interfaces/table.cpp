@@ -1,67 +1,5 @@
 #include "table.h"
 
-template <typename WidgetType>
-TableRowWidget<WidgetType>::TableRowWidget(QWidget *parent) : QWidget(parent)
-{
-    defaultStyle = QString("border-width: 1px;"
-                            "border-style: solid;"
-                            "border-color: black;");
-
-    // Setup layout
-    _rowLayout = new QHBoxLayout(this);
-    _rowLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
-    _rowLayout->setContentsMargins(QMargins());
-    _rowLayout->setSpacing(0);
-    setLayout(_rowLayout);
-}
-
-template <typename WidgetType>
-TableRowWidget<WidgetType>::~TableRowWidget()
-{
-    for (int i = 0; i < _columns.size(); ++i)
-        delete _columns[i];
-    _columns.clear();
-
-    delete _rowLayout;
-}
-
-template <typename WidgetType>
-void TableRowWidget<WidgetType>::updateRowData(QStringList data)
-{
-    // convert data to map of [col]=isDiff??
-    //QString currStyle = defaultStyle;
-    //currStyle.append("background-color : rgba(0,0,255,75);");
-
-    // Ensure at least one element
-    if (data.isEmpty()) data.append("");
-
-    int maxCols = std::max(data.size(), _columns.size());
-
-    for (int col = 0; col < maxCols; ++col)
-    {
-        WidgetType *lbl = Q_NULLPTR;
-
-        // Get the label to be updated
-        if (col < _columns.size())
-        {
-            lbl = _columns[col];
-        }
-        // Create a new label
-        else
-        {
-            lbl = new WidgetType(this);
-            lbl->setFixedSize(tableHeaderTimeWidth, cellWidgetHeight);
-            lbl->setStyleSheet(defaultStyle);
-
-            _columns.append(lbl);
-            _rowLayout->addWidget(lbl);
-        }
-
-        // Update
-        lbl->setText(data.value(col));
-    }
-}
-
 Table::Table(QWidget *parent) : QWidget(parent)
 {
     setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
@@ -99,7 +37,7 @@ void Table::onScrollTableUpdate(int min, int max)
     max -= max % tableRowHeight;
 
     // Add widgets to layout
-    for (int rowIdx = 0, pos = min; pos < max - tableLayoutHeightReserve && rowIdx < _rows.size();
+    for (int rowIdx = 0, pos = min; pos < max - tableReservedHeight && rowIdx < _rows.size();
          ++rowIdx, pos += tableRowHeight)
     {
         const int dataIdx = pos / tableRowHeight;
@@ -112,15 +50,15 @@ void Table::onScrollTableUpdate(int min, int max)
 
 void Table::resizeEvent(QResizeEvent *event)
 {
-    const int widgetHeight = event->size().height() - tableHeaderHeight;
+    const int dataHeight = event->size().height() - tableHeaderHeight;
 
     QWidget::resizeEvent(event);
-    updateScrollBar(widgetHeight);
+    updateScrollBar(dataHeight);
 
     if (!isInitialized)
-        initWidgetRows(widgetHeight);
+        initWidgetRows(dataHeight);
     else
-        onTableResize(_scrollBar->value(), _scrollBar->value() + widgetHeight);
+        onTableResize(_scrollBar->value(), _scrollBar->value() + dataHeight);
 }
 
 void Table::wheelEvent(QWheelEvent *event)
@@ -133,13 +71,18 @@ void Table::setHeaders(QStringList headers)
     _header->updateRowData(headers);
 }
 
+void Table::checkHeaders(bool isChecked)
+{
+    _header->setChecked(isChecked);
+}
+
 void Table::setData(QList<QStringList> data)
 {
     _data = data;
 
-    const int widgetHeight = this->height() - tableHeaderHeight;
-    updateScrollBar(widgetHeight);
-    onTableResize(_scrollBar->value(), _scrollBar->value() + widgetHeight);
+    const int dataHeight = this->height() - tableHeaderHeight;
+    updateScrollBar(dataHeight);
+    onTableResize(_scrollBar->value(), _scrollBar->value() + dataHeight);
 }
 
 void Table::initScrollBar()
@@ -158,7 +101,7 @@ void Table::initScrollBar()
 
 void Table::initHeader()
 {
-    _header = new TableRowWidget<QCheckBox>(this);
+    _header = new TableRowOfCheckboxs(tableCellWidth, tableHeaderHeight, this);
     _innerVLayout->addWidget(_header);
 }
 
@@ -179,12 +122,12 @@ void Table::initWidgetRows(int height)
     // Add new widgets
     for (int rowIdx = 0, pos = 0; rowIdx < _maxWidgetNumber; ++rowIdx, pos += tableRowHeight)
     {
-        TableRowWidget<QLabel> *tRow = new TableRowWidget<QLabel>(this);
+        TableRowOfLabels *tRow = new TableRowOfLabels(tableCellWidth, tableRowHeight, this);
         tRow->updateRowData(QStringList());
         _rows.append(tRow);
         _rows.back()->setMinimumHeight(1);
         _innerVLayout->addWidget(_rows.back());
-        if (pos >= height - tableLayoutHeightReserve || rowIdx >= _data.size())
+        if (pos >= height - tableReservedHeight || rowIdx >= _data.size())
             _rows.back()->hide();
     }
 
@@ -204,7 +147,7 @@ void Table::onTableResize(int newMin, int newMax)
     // Round bottom border
     newMax -= newMax % tableRowHeight;
     //    Add widgets to layout
-    for (int rowIdx = 0, pos = newMin; rowIdx < _rows.size() && pos < newMax - tableLayoutHeightReserve;
+    for (int rowIdx = 0, pos = newMin; rowIdx < _rows.size() && pos < newMax - tableReservedHeight;
          ++rowIdx, pos += tableRowHeight)
     {
         const int dataIdx = pos / tableRowHeight;
@@ -218,9 +161,9 @@ void Table::onTableResize(int newMin, int newMax)
     blockSignals(false);
 }
 
-void Table::updateScrollBar(int height)
+void Table::updateScrollBar(int dataHeight)
 {
-    int scrollBarMax = _data.size() * tableRowHeight - height + tableLayoutHeightReserve;
+    int scrollBarMax = (_data.size() * tableRowHeight) - dataHeight + tableReservedHeight;
 
     //  Hide when there are too little widgets
     if (scrollBarMax <= 0)

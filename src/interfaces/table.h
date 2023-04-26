@@ -40,14 +40,15 @@ private:
     void onTableResize(int newMin, int newMax);
     void updateScrollBar(int height);
 
-    QScrollBar *_scrollBar = nullptr;
-    TableRowOfCheckboxs *_header = nullptr;
-    QList<TableRowOfLabels*> _rows;
-    QVBoxLayout *_innerVLayout = nullptr;
-    QGridLayout *_mainGLayout = nullptr;
-    bool isInitialized = false;
+    // UI elements
+    // TODO: horizontal scrolling...
+    QScrollBar *scrollBar = nullptr;
+    TableRowOfCheckboxs *headerRow = nullptr;
+    QList<TableRowOfLabels*> dataRows; // The data rows that are currently visible (or just outside of view)
+    QVBoxLayout *innerVLayout = nullptr; // Contains the header and data rows
+    QGridLayout *mainGLayout = nullptr; // Contains the innerVLayout and the scrollBar
 
-    QList<QStringList> _data;
+    QList<QStringList> csvData; // The data that populates the UI (and repopulates onScroll)
 
 signals:
     void checkboxStateChanged(int state, int idx);

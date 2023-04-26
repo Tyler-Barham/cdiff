@@ -5,30 +5,30 @@ Table::Table(QWidget *parent) : QWidget(parent)
     setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
     setMinimumHeight(tableMinimalHeight);
 
-    _mainGLayout = new QGridLayout();
-    _mainGLayout->setAlignment(Qt::AlignTop);
+    mainGLayout = new QGridLayout();
+    mainGLayout->setAlignment(Qt::AlignTop);
 
-    _innerVLayout = new QVBoxLayout();
-    _innerVLayout->setSpacing(0);
-    _innerVLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
-    _mainGLayout->addLayout(_innerVLayout, 0, 0);
+    innerVLayout = new QVBoxLayout();
+    innerVLayout->setSpacing(0);
+    innerVLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+    mainGLayout->addLayout(innerVLayout, 0, 0);
 
     initScrollBar();
     initHeader();
 
-    setLayout(_mainGLayout);
+    setLayout(mainGLayout);
 }
 
 Table::~Table()
 {
-    for (int i = 0; i < _rows.size(); ++i)
-        delete _rows[i];
-    _rows.clear();
+    for (int i = 0; i < dataRows.size(); ++i)
+        delete dataRows[i];
+    dataRows.clear();
 
-    delete _header;
-    delete _scrollBar;
-    delete _innerVLayout;
-    delete _mainGLayout;
+    delete headerRow;
+    delete scrollBar;
+    delete innerVLayout;
+    delete mainGLayout;
 }
 
 void Table::onScrollTableUpdate(int min, int max)
@@ -37,14 +37,14 @@ void Table::onScrollTableUpdate(int min, int max)
     max -= max % tableRowHeight;
 
     // Add widgets to layout
-    for (int rowIdx = 0, pos = min; pos < max - tableReservedHeight && rowIdx < _rows.size();
+    for (int rowIdx = 0, pos = min; pos < max - tableReservedHeight && rowIdx < dataRows.size();
          ++rowIdx, pos += tableRowHeight)
     {
         const int dataIdx = pos / tableRowHeight;
-        if (dataIdx >= _data.size())
+        if (dataIdx >= csvData.size())
             break;
 
-        _rows[rowIdx]->updateRowData(_data.value(dataIdx));
+        dataRows[rowIdx]->updateRowData(csvData.value(dataIdx));
     }
 }
 
@@ -55,45 +55,45 @@ void Table::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
     updateScrollBar(dataHeight);
 
-    if (!isInitialized)
+    if (dataRows.isEmpty())
         initWidgetRows(dataHeight);
     else
-        onTableResize(_scrollBar->value(), _scrollBar->value() + dataHeight);
+        onTableResize(scrollBar->value(), scrollBar->value() + dataHeight);
 }
 
 void Table::wheelEvent(QWheelEvent *event)
 {
-    _scrollBar->event(event);
+    scrollBar->event(event);
 }
 
 void Table::setHeaders(QStringList headers)
 {
-    _header->updateRowData(headers);
+    headerRow->updateRowData(headers);
 }
 
 void Table::setHeaderState(int state, int idx)
 {
-    _header->setCheckState(state, idx);
+    headerRow->setCheckState(state, idx);
 }
 
 void Table::setData(QList<QStringList> data)
 {
-    _data = data;
+    csvData = data;
 
     const int dataHeight = this->height() - tableHeaderHeight;
     updateScrollBar(dataHeight);
-    onTableResize(_scrollBar->value(), _scrollBar->value() + dataHeight);
+    onTableResize(scrollBar->value(), scrollBar->value() + dataHeight);
 }
 
 void Table::initScrollBar()
 {
-    _scrollBar = new QScrollBar(this);
-    _scrollBar->setSingleStep(tableRowHeight);
-    _scrollBar->setPageStep(tableRowHeight);
+    scrollBar = new QScrollBar(this);
+    scrollBar->setSingleStep(tableRowHeight);
+    scrollBar->setPageStep(tableRowHeight);
 
-    _mainGLayout->addWidget(_scrollBar, 0, 1);
+    mainGLayout->addWidget(scrollBar, 0, 1);
 
-    connect(_scrollBar, &QScrollBar::valueChanged, this,
+    connect(scrollBar, &QScrollBar::valueChanged, this,
             [&](int pos) { return onScrollTableUpdate(pos, pos + this->height()); });
 
     updateScrollBar(this->height());
@@ -101,9 +101,9 @@ void Table::initScrollBar()
 
 void Table::initHeader()
 {
-    _header = new TableRowOfCheckboxs(tableCellWidth, tableHeaderHeight, this);
-    _innerVLayout->addWidget(_header);
-    connect(_header, &TableRowOfCheckboxs::stateChanged, this, &Table::checkboxStateChanged);
+    headerRow = new TableRowOfCheckboxs(tableCellWidth, tableHeaderHeight, this);
+    innerVLayout->addWidget(headerRow);
+    connect(headerRow, &TableRowOfCheckboxs::stateChanged, this, &Table::checkboxStateChanged);
 }
 
 void Table::initWidgetRows(int height)
@@ -125,14 +125,12 @@ void Table::initWidgetRows(int height)
     {
         TableRowOfLabels *tRow = new TableRowOfLabels(tableCellWidth, tableRowHeight, this);
         tRow->updateRowData(QStringList());
-        _rows.append(tRow);
-        _rows.back()->setMinimumHeight(1);
-        _innerVLayout->addWidget(_rows.back());
-        if (pos >= height - tableReservedHeight || rowIdx >= _data.size())
-            _rows.back()->hide();
+        dataRows.append(tRow);
+        dataRows.back()->setMinimumHeight(1);
+        innerVLayout->addWidget(dataRows.back());
+        if (pos >= height - tableReservedHeight || rowIdx >= csvData.size())
+            dataRows.back()->hide();
     }
-
-    isInitialized = true;
 }
 
 void Table::onTableResize(int newMin, int newMax)
@@ -140,23 +138,23 @@ void Table::onTableResize(int newMin, int newMax)
     blockSignals(true);
 
     // Remove widgets from layout
-    for (int rowIdx = 0; rowIdx < _rows.size(); ++rowIdx)
+    for (int rowIdx = 0; rowIdx < dataRows.size(); ++rowIdx)
     {
-        _rows[rowIdx]->hide();
+        dataRows[rowIdx]->hide();
     }
 
     // Round bottom border
     newMax -= newMax % tableRowHeight;
     //    Add widgets to layout
-    for (int rowIdx = 0, pos = newMin; rowIdx < _rows.size() && pos < newMax - tableReservedHeight;
+    for (int rowIdx = 0, pos = newMin; rowIdx < dataRows.size() && pos < newMax - tableReservedHeight;
          ++rowIdx, pos += tableRowHeight)
     {
         const int dataIdx = pos / tableRowHeight;
-        if (dataIdx >= _data.size())
+        if (dataIdx >= csvData.size())
             break;
 
-        _rows[rowIdx]->updateRowData(_data.at(dataIdx));
-        _rows[rowIdx]->show();
+        dataRows[rowIdx]->updateRowData(csvData.at(dataIdx));
+        dataRows[rowIdx]->show();
     }
 
     blockSignals(false);
@@ -164,20 +162,20 @@ void Table::onTableResize(int newMin, int newMax)
 
 void Table::updateScrollBar(int dataHeight)
 {
-    int scrollBarMax = (_data.size() * tableRowHeight) - dataHeight + tableReservedHeight;
+    int scrollBarMax = (csvData.size() * tableRowHeight) - dataHeight + tableReservedHeight;
 
     //  Hide when there are too little widgets
     if (scrollBarMax <= 0)
     {
-        _scrollBar->setMinimum(0);
-        _scrollBar->setMaximum(0);
-        _scrollBar->hide();
+        scrollBar->setMinimum(0);
+        scrollBar->setMaximum(0);
+        scrollBar->hide();
         return;
     }
 
     // Round up
     if (scrollBarMax % tableRowHeight != 0)
         scrollBarMax += tableRowHeight - scrollBarMax % tableRowHeight;
-    _scrollBar->setMaximum(scrollBarMax);
-    _scrollBar->show();
+    scrollBar->setMaximum(scrollBarMax);
+    scrollBar->show();
 }

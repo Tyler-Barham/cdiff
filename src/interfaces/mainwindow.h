@@ -27,8 +27,6 @@ private:
 
     void resizeEvent(QResizeEvent *event) override;
     void setupCsv();
-    void displayHeaders(QStringList headersA, QStringList headersB);
-    void clearCsvGrids();
     void triggerUpdate();
     void updateCheckboxes(int state, int idx);
 

@@ -30,6 +30,7 @@ public:
 
     void setHeaders(QStringList headers);
     void setHeaderState(int state, int idx);
+    QList<int> getHeaderStates() { return headerRow->getCheckedStates(); }
     void setData(QList<QStringList> data);
 
 private:

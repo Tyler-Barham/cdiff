@@ -47,6 +47,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
 
+    // TODO: Update for new UI
     // TODO: Resizing smaller than initial size work. Resizing larger expands some inner containers but not all?
     QRect rectCentral = ui->centralWidget->geometry();
     rectCentral.setWidth(event->size().width());
@@ -84,26 +85,13 @@ void MainWindow::setupCsv()
     csvThread->start();
 }
 
-void MainWindow::clearCsvGrids()
+void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
 {
-    // TODO: Setup for table class
-}
-
-void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
-{
-    tableA->setHeaders(headersA);
-    tableB->setHeaders(headersB);
+    tableA->setHeaders(csvDataA.takeFirst());
+    tableB->setHeaders(csvDataB.takeFirst());
 
     connect(tableA, &Table::checkboxStateChanged, this, &MainWindow::onCheckboxStateChanged);
     connect(tableB, &Table::checkboxStateChanged, this, &MainWindow::onCheckboxStateChanged);
-}
-
-void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
-{
-    // Remove old data
-    clearCsvGrids();
-    // Setup headers again
-    displayHeaders(csvDataA.takeFirst(), csvDataB.takeFirst());
 
     tableA->setData(csvDataA);
     tableB->setData(csvDataB);
@@ -122,24 +110,14 @@ void MainWindow::displayDiff(QList<QPoint> diffPoints)
 
 void MainWindow::triggerUpdate()
 {
-    // Read the threshhold
+    // Get threshold and columns to apply threshold to
     double thresh = ui->inputTolerance->value();
-
-    // Get columns that are checked
-    QList<int> columnIndexes;
-
-    // TODO: Setup for table class
-    /*
-    foreach columnHeader
-        if (colHead->isChecked())
-            columnIndexes.append(col);
-    // Set the selectAll checkbox state depending on the number of columns checked
-    */
+    QList<int> columnIndexes = tableA->getHeaderStates();
 
     // Trigger a diff update
     emit updateDiff(thresh, columnIndexes);
 
-    // Reset higlighting while the diff thread is working
+    // TODO Reset higlighting while the diff thread is working
     // The DisplayDiff slot may be triggered before we finish highlighting, but cannot execute until after
 }
 

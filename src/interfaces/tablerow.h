@@ -101,8 +101,10 @@ public:
         : TableRow(_cellWidth, _rowHeight, parent)
     {}
 
-    void setCheckState(int state, int idx);
     virtual void updateRowData(QStringList data) override;
+
+    void setCheckState(int state, int idx);
+    QList<int> getCheckedStates();
 
 public slots:
     void onCheckboxStateChanged(int state);

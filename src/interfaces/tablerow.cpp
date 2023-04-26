@@ -1,5 +1,15 @@
 #include "tablerow.h"
 
+void TableRowOfCheckboxs::updateRowData(QStringList data)
+{
+    TableRow::updateRowData(data);
+
+    for(QCheckBox *cBox : columns)
+    {
+        connect(cBox, &QCheckBox::stateChanged, this, &TableRowOfCheckboxs::onCheckboxStateChanged);
+    }
+}
+
 void TableRowOfCheckboxs::setCheckState(int state, int idx)
 {
     Qt::CheckState checkState = static_cast<Qt::CheckState>(state);
@@ -21,14 +31,18 @@ void TableRowOfCheckboxs::setCheckState(int state, int idx)
     }
 }
 
-void TableRowOfCheckboxs::updateRowData(QStringList data)
+QList<int> TableRowOfCheckboxs::getCheckedStates()
 {
-    TableRow::updateRowData(data);
+    QList<int> checkedIdxes;
 
-    for(QCheckBox *cBox : columns)
+    for(int i = 0; i < columns.size(); ++i)
     {
-        connect(cBox, &QCheckBox::stateChanged, this, &TableRowOfCheckboxs::onCheckboxStateChanged);
+        if(columns.at(i)->isChecked())
+        {
+            checkedIdxes.append(i);
+        }
     }
+    return checkedIdxes;
 }
 
 void TableRowOfCheckboxs::onCheckboxStateChanged(int state)

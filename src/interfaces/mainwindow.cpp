@@ -93,18 +93,9 @@ void MainWindow::displayHeaders(QStringList headersA, QStringList headersB)
 {
     tableA->setHeaders(headersA);
     tableB->setHeaders(headersB);
-    // TODO: Add checkboxes to table headers and connect to selectAll checkbox
 
-    /*
-    // Get initial state of checkboxes
-    bool selectAll = ui->checkBoxAllCols->isChecked();
-
-    foreach column
-        ...
-        colHeadA->setChecked(selectAll);
-        connect(colHeadA, &QCheckBox::stateChanged, this, &MainWindow::onCheckboxStateChanged);
-        ...->addWidget(colHeadA, 0, col);
-    */
+    connect(tableA, &Table::checkboxStateChanged, this, &MainWindow::onCheckboxStateChanged);
+    connect(tableB, &Table::checkboxStateChanged, this, &MainWindow::onCheckboxStateChanged);
 }
 
 void MainWindow::displayCsv(QList<QStringList> csvDataA, QList<QStringList> csvDataB)
@@ -158,32 +149,29 @@ void MainWindow::on_inputTolerance_valueChanged(double arg1)
     triggerUpdate();
 }
 
-void MainWindow::onCheckboxStateChanged(int state)
+void MainWindow::updateCheckboxes(int state, int idx)
 {
-    Q_UNUSED(state);
+    tableA->blockSignals(true);
+    tableB->blockSignals(true);
 
-    // TODO: Setup for table class
-    /*
-    // Find which checkbox triggered this slot
-    // Get the checkbox from the other grid and toggle it so that both sides have the same state
-    */
+    tableA->setHeaderState(state, idx);
+    tableB->setHeaderState(state, idx);
+
+    tableA->blockSignals(false);
+    tableB->blockSignals(false);
+
     triggerUpdate();
+}
+
+void MainWindow::onCheckboxStateChanged(int state, int idx)
+{
+    updateCheckboxes(state, idx);
 }
 
 void MainWindow::on_checkBoxAllCols_stateChanged(int arg1)
 {
-    // TODO: Setup for table class
-
-    /*
-    Qt::CheckState state = static_cast<Qt::CheckState>(arg1);
-    if (state == Qt::CheckState::PartiallyChecked) return; // A column header was clicked
-    else
-        foreach...
-            colHeadA->blockSignals(true);
-            colHeadA->setCheckState(state);
-            colHeadA->blockSignals(false);
-    */
-    triggerUpdate();
+    // -1 == all
+    updateCheckboxes(arg1, -1);
 }
 
 void MainWindow::on_btnSelectFiles_clicked()
@@ -202,6 +190,8 @@ void MainWindow::on_btnSelectFiles_clicked()
     // Update the labels with filenames
     ui->labelFileA->setText(pathA.split('/').last());
     ui->labelFileB->setText(pathB.split('/').last());
+
+    ui->checkBoxAllCols->setCheckState(Qt::CheckState::Unchecked);
 
     // Trigger a reload of data
     emit loadCsv(pathA, pathB, delim);

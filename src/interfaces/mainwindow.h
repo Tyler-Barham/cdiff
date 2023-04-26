@@ -30,6 +30,7 @@ private:
     void displayHeaders(QStringList headersA, QStringList headersB);
     void clearCsvGrids();
     void triggerUpdate();
+    void updateCheckboxes(int state, int idx);
 
     CsvComparison *csvComparison;
     QThread *csvThread;
@@ -43,7 +44,7 @@ private slots:
     void displayDiff(QList<QPoint> diffPoints);
 
     // Connected to UI signals (manually)
-    void onCheckboxStateChanged(int state);
+    void onCheckboxStateChanged(int state, int idx);
 
     // Connected to UI signals (automatically)
     void on_inputTolerance_valueChanged(double arg1);

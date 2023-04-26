@@ -37,7 +37,7 @@ public:
         delete rowLayout;
     }
 
-    void updateRowData(QStringList data)
+    virtual void updateRowData(QStringList data)
     {
         // convert data to map of [col]=isDiff??
         //QString currStyle = defaultStyle;
@@ -94,12 +94,21 @@ public:
 
 class TableRowOfCheckboxs : public TableRow<QCheckBox>
 {
+    Q_OBJECT
+
 public:
     TableRowOfCheckboxs(int _cellWidth, int _rowHeight, QWidget *parent=nullptr)
         : TableRow(_cellWidth, _rowHeight, parent)
     {}
 
-    void setChecked(bool isChecked);
+    void setCheckState(int state, int idx);
+    virtual void updateRowData(QStringList data) override;
+
+public slots:
+    void onCheckboxStateChanged(int state);
+
+signals:
+    void stateChanged(int state, int idx);
 };
 
 #endif // TABLEROW_H

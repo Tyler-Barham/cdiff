@@ -19,6 +19,8 @@ constexpr int tableMinimalHeight = tableHeaderHeight + (3 * tableRowHeight) + ta
 
 class Table : public QWidget
 {
+    Q_OBJECT
+
 public:
     Table(QWidget *parent = nullptr);
     ~Table();
@@ -27,7 +29,7 @@ public:
     virtual void wheelEvent(QWheelEvent *event) override;
 
     void setHeaders(QStringList headers);
-    void checkHeaders(bool isChecked);
+    void setHeaderState(int state, int idx);
     void setData(QList<QStringList> data);
 
 private:
@@ -46,6 +48,9 @@ private:
     bool isInitialized = false;
 
     QList<QStringList> _data;
+
+signals:
+    void checkboxStateChanged(int state, int idx);
 };
 
 #endif // TABLE_H

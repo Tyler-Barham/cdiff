@@ -71,9 +71,9 @@ void Table::setHeaders(QStringList headers)
     _header->updateRowData(headers);
 }
 
-void Table::checkHeaders(bool isChecked)
+void Table::setHeaderState(int state, int idx)
 {
-    _header->setChecked(isChecked);
+    _header->setCheckState(state, idx);
 }
 
 void Table::setData(QList<QStringList> data)
@@ -103,6 +103,7 @@ void Table::initHeader()
 {
     _header = new TableRowOfCheckboxs(tableCellWidth, tableHeaderHeight, this);
     _innerVLayout->addWidget(_header);
+    connect(_header, &TableRowOfCheckboxs::stateChanged, this, &Table::checkboxStateChanged);
 }
 
 void Table::initWidgetRows(int height)
